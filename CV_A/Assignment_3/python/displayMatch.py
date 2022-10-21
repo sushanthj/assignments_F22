@@ -17,7 +17,7 @@ def displayMatched(opts, image1, image2):
 
     matches, locs1, locs2 = matchPics(image1, image2, opts)
 
-    #display matched features
+    # display matched features
     plotMatches(image1, image2, matches, locs1, locs2)
 
 if __name__ == "__main__":
