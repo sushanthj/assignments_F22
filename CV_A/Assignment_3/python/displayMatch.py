@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from matchPics import matchPics
+from scipy import ndimage
 from helper import plotMatches
 from opts import get_opts
 
@@ -24,6 +25,7 @@ if __name__ == "__main__":
 
     opts = get_opts()
     image1 = cv2.imread('../data/cv_cover.jpg')
+    # image2 = ndimage.rotate(image1, 10)
     image2 = cv2.imread('../data/cv_desk.png')
 
     displayMatched(opts, image1, image2)
