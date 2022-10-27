@@ -1,10 +1,63 @@
+import sre_parse
 import numpy as np
 import cv2
+import skimage.io 
+import skimage.color
+from opts import get_opts
+from matchPics import matchPics
+import HarryPotterize
 
 #Import necessary functions
 
 from helper import loadVid
 
+def main(opts):
+    pass
 
+def extract_frames(path):
+    frames = loadVid(path)
+    return frames
 
-#Write script for Q3.1
+def extract_frames_2(path):
+    frame_seq = []
+    currentframe = 0
+
+    # Read the video from specified path
+    cam = cv2.VideoCapture(path)
+    
+    while(True):
+        
+        # reading from frame
+        success,frame = cam.read()
+
+        currentframe += 1
+        if success and currentframe%100 == 0 :
+            # if video is still left continue creating images
+            print("frame no. is", currentframe)
+            frame = np.array(frame)
+            frame_seq.append(frame)
+        elif currentframe == 502:
+            break
+    
+    # Release all space and windows once done
+    cam.release()
+
+    return frame_seq
+
+def crop_frames(dst_frames, book_shape):
+    # crop each dst_frame to match the src_frame's book
+    pass
+
+if __name__ == '__main__':
+    opts = get_opts()
+    
+    # extract frames from videos
+    video1_path = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/data/book.mov'
+    video2_path = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/data/ar_source.mov'
+    dst_frames = extract_frames_2(video2_path)
+    src_frames = extract_frames_2(video1_path)
+
+    # crop frames of dst to fit src
+    dst_frames = crop_frames(dst_frames, src_frames[0])
+    
+    main(opts)
