@@ -1,7 +1,11 @@
+from copy import deepcopy
+from dataclasses import replace
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import skimage.color
+import math
+import random
 from scipy import ndimage
 from matchPics import matchPics
 from helper import plotMatches
@@ -144,9 +148,10 @@ def create_matched_points(matches, locs1, locs2):
     return matched_points[1:,:]
 
 def test_homography(im_src, im_dst, h):
-    h = np.linalg.inv(h)
+    # h = np.linalg.inv(h)
     # Warp destination image to source image based on homography
-    im_out = cv2.warpPerspective(im_dst, h, (im_dst.shape[1],im_dst.shape[0]))
+    # im_out = cv2.warpPerspective(im_dst, h, (im_dst.shape[1]+200,im_dst.shape[0]+200))
+    im_out = cv2.warpPerspective(im_dst, h, (im_src.shape[1],im_src.shape[0]))
 
     # Display images
     cv2.imshow("Source Image", im_src)
@@ -160,24 +165,116 @@ def computeH_ransac(locs1, locs2, opts):
     max_iters = opts.max_iters  # the number of iterations to run RANSAC for
     inlier_tol = opts.inlier_tol # the tolerance value for considering a point to be an inlier
 
-    #? Create a boolean vector of length N where 1 = inlier and 0 = outlier
-    
+    # define size of both locs1 and locs2
+    num_rows = locs1.shape[0]
 
-    return bestH2to1, inliers
+    # define a container for keeping track of inlier counts
+    final_inlier_count = 0
+    final_distance_error = 10000
+
+    #? Create a boolean vector of length N where 1 = inlier and 0 = outlier
+    for i in range(max_iters):
+        test_locs1 = deepcopy(locs1)
+        test_locs2 = deepcopy(locs2)
+        # chose a random sample of 4 points to find H
+        rand_index = []
+        
+        rand_index = random.sample(range(int(locs1.shape[0])),k=4)
+        
+        rand_points_1 = []
+        rand_points_2 = []
+        
+        for j in rand_index:
+            rand_points_1.append(locs1[j,:])
+            rand_points_2.append(locs2[j,:])
+        
+        test_locs1 = np.delete(test_locs1, rand_index, axis=0)
+        test_locs2 = np.delete(test_locs2, rand_index, axis=0)
+            
+        correspondence_points_1 = np.vstack(rand_points_1)
+        correspondence_points_2 = np.vstack(rand_points_2)
+
+        ref_H = computeH_norm(correspondence_points_1, correspondence_points_2)
+        inliers, inlier_count, distance_error = compute_inliers(ref_H, test_locs1, test_locs2, inlier_tol)
+
+        if (inlier_count > final_inlier_count) and (distance_error < final_distance_error):
+            final_inlier_count = inlier_count
+            final_inliers = inliers
+            most_inlier_h = ref_H
+            final_corresp_points_1 = correspondence_points_1
+            final_corresp_points_2 = correspondence_points_2
+            final_distance_error = distance_error
+
+    print("original point count is", locs1.shape[0])
+    print("final inlier count is", final_inlier_count)
+    print("final inlier's cumulative distance error is", final_distance_error)
+
+    delete_indexes = np.where(final_inliers==0)
+    print("delete indexes is", delete_indexes)
+    final_locs_1 = np.delete(test_locs1, delete_indexes, axis=0)
+    final_locs_2 = np.delete(test_locs2, delete_indexes, axis=0)
+
+    final_locs_1 = np.vstack((final_locs_1, final_corresp_points_1))
+    final_locs_2 = np.vstack((final_locs_2, final_corresp_points_2))
+
+    print("refined_locs1 shape is", final_locs_1.shape)
+    print("refined_locs2 shape is", final_locs_2.shape)
+
+    bestH2to1 = computeH_norm(final_locs_1, final_locs_2)
+    return bestH2to1, final_inliers
+
+def compute_inliers(H, x1, x2, tol):
+    inliers = []
+    count = 0
+    distance_error_sum = 0
+    for i in range(x1.shape[0]):
+        p1 = x1[i,:]
+        p1 = np.append(p1, 1)
+        p2 = x2[i,:]
+
+        point2_estimate_no_scale = np.matmul(H, p1)
+        p2_est = np.array([point2_estimate_no_scale[0]/point2_estimate_no_scale[2],
+                            point2_estimate_no_scale[1]/point2_estimate_no_scale[2]])
+        
+        # distance between 2 points
+        dist_error = math.sqrt(math.pow((p1[1]-p2_est[1]),2) + math.pow((p1[0]-p2_est[0]),2))
+        distance_error_sum += dist_error
+        print("dist error is", dist_error)
+
+        if dist_error < tol:
+            inliers.append(1)
+            count += 1
+        else:
+            inliers.append(0)
+    
+    inliers = np.array(inliers)
+    # print("inlier count is", count)
+    # print("inliers is", inliers)
+    return inliers, count, distance_error_sum
+
 
 if __name__ == "__main__":
 
     opts = get_opts()
     image1 = cv2.imread('../data/cv_cover.jpg')
-    image2 = ndimage.rotate(image1, 3)
+    # image2 = ndimage.rotate(image1, 3)
+    image2 = cv2.imread('../data/cv_desk.png')
+
     
     image1_gray = skimage.color.rgb2gray(image1)
     image2_gray = skimage.color.rgb2gray(image2)
 
     matches, locs1, locs2 = matchPics(image1, image2, opts)
+
+    # invert the columns of locs1 and locs2
+    locs1[:, [1, 0]] = locs1[:, [0, 1]]
+    locs2[:, [1, 0]] = locs2[:, [0, 1]]
+
     matched_points = create_matched_points(matches, locs1, locs2)
-    h = computeH_ransac(matched_points[:,0:2], matched_points[:,2:])
+    h, inlier = computeH_ransac(matched_points[:,0:2], matched_points[:,2:], opts)
+    # h = computeH_norm(matched_points[:,0:2], matched_points[:,2:])
 
     print("homography matrix is \n", h)
 
-    test_homography(image1_gray, image2_gray, h)
+    test_homography(image2_gray, image1_gray, np.linalg.inv(h))
+    # test_homography(image2_gray, image1_gray, h)
