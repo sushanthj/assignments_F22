@@ -30,6 +30,7 @@ def warpImage(opts):
 
     print("homography matrix is \n", h)
     
+    # compositeH(h, source, destination)
     composite_img = compositeH(h, template_img, image2)
 
     # Display images

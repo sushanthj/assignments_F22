@@ -48,6 +48,25 @@ def crop_frames(dst_frames, book_shape):
     # crop each dst_frame to match the src_frame's book
     pass
 
+def warp_frames_and_composite(dst_frames, src_frames):
+
+    matches, locs1, locs2 = matchPics(image1, image2, opts)
+
+    # invert the columns of locs1 and locs2
+    locs1[:, [1, 0]] = locs1[:, [0, 1]]
+    locs2[:, [1, 0]] = locs2[:, [0, 1]]
+
+    matched_points = create_matched_points(matches, locs1, locs2)
+    h, inlier = computeH_ransac(matched_points[:,0:2], matched_points[:,2:], opts)
+
+    print("homography matrix is \n", h)
+    
+    composite_img = compositeH(h, template_img, image2)
+
+    # Display images
+    cv2.imshow("Composite Image :)", composite_img)
+    cv2.waitKey()
+
 if __name__ == '__main__':
     opts = get_opts()
     
@@ -58,6 +77,9 @@ if __name__ == '__main__':
     src_frames = extract_frames_2(video1_path)
 
     # crop frames of dst to fit src
-    dst_frames = crop_frames(dst_frames, src_frames[0])
+    # dst_frames = crop_frames(dst_frames, src_frames[0])
+
+    cv2.imshow("book_img", src_frames[0])
+    cv2.waitKey()
     
     main(opts)

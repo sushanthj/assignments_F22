@@ -7,6 +7,7 @@ import skimage.color
 import math
 import random
 from scipy import ndimage
+from scipy.spatial import distance
 from matchPics import matchPics
 from helper import plotMatches
 from opts import get_opts
@@ -30,7 +31,7 @@ def computeH(x1, x2):
     # Define a dummy H matrix
     A_build = []
     
-    #? Define the A matrix for (Ah = 0) (A matrix size = N*2 x 9)
+    # Define the A matrix for (Ah = 0) (A matrix size = N*2 x 9)
     for i in range(x1.shape[0]):
         row_1 = np.array([ x2[i,0], x2[i,1], 1, 0, 0, 0, -x1[i,0]*x2[i,0], -x1[i,0]*x2[i,1], -x1[i,0] ])
         row_2 = np.array([ 0, 0, 0, x2[i,0], x2[i,1], 1, -x1[i,1]*x2[i,0], -x1[i,1]*x2[i,1], -x1[i,1] ])
@@ -39,21 +40,13 @@ def computeH(x1, x2):
     
     A = np.stack(A_build, axis=0)
 
-    #? Do the least squares minimization to get the homography matrix
-    #? this is done as eigenvector coresponding to smallest eigen value of A`A = H matrix
-    #! Which one is correct?
+    # Do the least squares minimization to get the homography matrix
+    # this is done as eigenvector coresponding to smallest eigen value of A`A = H matrix
     u, s, v = np.linalg.svd(np.matmul(A.T, A))
-    # u, s, v = np.linalg.svd(A)
 
     # here the linalg.svd gives v_transpose
     # but we need just V therefore we again transpose
-    v = np.transpose(v)
-
-    # print("the V matrix is \n", np.round(v, 3))
-    # print("\n the singular matrix is \n", s)
-
-    H2to1 = np.reshape(v[:,-1], (3,3))
-    # print("unnormed Homography matrix is \n", H2to1)
+    H2to1 = np.reshape(v.T[:,-1], (3,3))
     return H2to1
 
 
@@ -83,13 +76,13 @@ def computeH_norm(x1, x2):
     moved_x1 = x1 - centroid_img_1
     moved_x2 = x2 - centroid_img_2
 
-    current_avg_dist_img1 = np.sum(np.sqrt(( (moved_x1[:,0] * moved_x1[:,0])+(moved_x1[:,1]*moved_x1[:,1]) )))/x1.shape[0]
-    current_avg_dist_img2 = np.sum(np.sqrt(( (moved_x2[:,0] * moved_x2[:,0])+(moved_x2[:,1]*moved_x2[:,1]) )))/x2.shape[0]
+    current_max_dist_img1 = np.max(np.linalg.norm(moved_x1),axis=0)
+    current_max_dist_img2 = np.max(np.linalg.norm(moved_x2),axis=0)
+
     
     # moved and scaled image 1 points
-
-    scale1 = (1 / (current_avg_dist_img1)) * np.sqrt(2)
-    scale2 = (1 / (current_avg_dist_img2)) * np.sqrt(2)
+    scale1 = np.sqrt(2) / (current_max_dist_img1)
+    scale2 = np.sqrt(2) / (current_max_dist_img2)
     moved_scaled_x1 = moved_x1 * scale1
     moved_scaled_x2 = moved_x2 * scale2
 
@@ -122,16 +115,16 @@ def create_matched_points(matches, locs1, locs2):
     Returns:
         _type_: _description_
     """
-    matched_points = np.array([0.0,0.0,0.0,0.0], dtype=np.float32)
+    matched_pts = []
     for i in range(matches.shape[0]):
-        matched_points = np.vstack((matched_points,
-                                    np.array([locs1[matches[i,0],0],
+        matched_pts.append(np.array([locs1[matches[i,0],0],
                                               locs1[matches[i,0],1],
                                               locs2[matches[i,1],0],
-                                              locs2[matches[i,1],1]])))
+                                              locs2[matches[i,1],1]]))
     
     # remove the first dummy value and return
-    return matched_points[1:,:]
+    matched_points = np.stack(matched_pts, axis=0)
+    return matched_points
 
 def computeH_ransac(locs1, locs2, opts):
     #Q2.2.3
@@ -175,10 +168,11 @@ def computeH_ransac(locs1, locs2, opts):
         if (inlier_count > final_inlier_count) and (distance_error < final_distance_error):
             final_inlier_count = inlier_count
             final_inliers = inliers
-            most_inlier_h = ref_H
             final_corresp_points_1 = correspondence_points_1
             final_corresp_points_2 = correspondence_points_2
             final_distance_error = distance_error
+            final_test_locs1 = test_locs1
+            final_test_locs2 = test_locs2
 
     print("original point count is", locs1.shape[0])
     print("final inlier count is", final_inlier_count)
@@ -186,8 +180,8 @@ def computeH_ransac(locs1, locs2, opts):
 
     delete_indexes = np.where(final_inliers==0)
     print("delete indexes is", delete_indexes)
-    final_locs_1 = np.delete(test_locs1, delete_indexes, axis=0)
-    final_locs_2 = np.delete(test_locs2, delete_indexes, axis=0)
+    final_locs_1 = np.delete(final_test_locs1, delete_indexes, axis=0)
+    final_locs_2 = np.delete(final_test_locs2, delete_indexes, axis=0)
 
     final_locs_1 = np.vstack((final_locs_1, final_corresp_points_1))
     final_locs_2 = np.vstack((final_locs_2, final_corresp_points_2))
@@ -198,39 +192,30 @@ def computeH_ransac(locs1, locs2, opts):
     bestH2to1 = computeH_norm(final_locs_1, final_locs_2)
     return bestH2to1, final_inliers
 
-def compute_inliers(H, x1, x2, tol):
-    inliers = []
-    count = 0
-    distance_error_sum = 0
+def compute_inliers(h, x1, x2, tol):
+    # take H inv to map points in x1 to x2
+    H = np.linalg.inv(h)
+
+    x2_extd = np.append(x2, np.ones((x2.shape[0],1)), axis=1)
+    x1_extd = (np.append(x1, np.ones((x1.shape[0],1)), axis=1))
+    x2_est = np.zeros((x2_extd.shape), dtype=x2_extd.dtype)
+
     for i in range(x1.shape[0]):
-        p1 = x1[i,:]
-        p1 = np.append(p1, 1)
-        p2 = x2[i,:]
-
-        point2_estimate_no_scale = np.matmul(H, p1)
-        p2_est = np.array([point2_estimate_no_scale[0]/point2_estimate_no_scale[2],
-                            point2_estimate_no_scale[1]/point2_estimate_no_scale[2]])
-        
-        # distance between 2 points
-        dist_error = math.sqrt(math.pow((p1[1]-p2_est[1]),2) + math.pow((p1[0]-p2_est[0]),2))
-        distance_error_sum += dist_error
-        # print("dist error is", dist_error)
-
-        if dist_error < tol:
-            inliers.append(1)
-            count += 1
-        else:
-            inliers.append(0)
+        x2_est[i,:] = H @ x1_extd[i,:]
     
-    inliers = np.array(inliers)
-    # print("inlier count is", count)
-    # print("inliers is", inliers)
-    return inliers, count, distance_error_sum
+    x2_est = x2_est/np.expand_dims(x2_est[:,2], axis=1)
+    dist_error = np.linalg.norm((x2_extd-x2_est),axis=1)
+    
+    # print("dist error is", dist_error)
+    inliers = np.where((dist_error < tol), 1, 0)
+    inlier_count = np.count_nonzero(inliers == 1)
+    
+    return inliers, inlier_count, np.sum(dist_error)
 
 
 def compositeH(H2to1, template, img):
-    # src_img = img
-    # destination_img = template
+    # destination_img = img
+    # source_img = template
     h = np.linalg.inv(H2to1)
     # im_out = cv2.warpPerspective(im_dst, h, (im_src.shape[1],im_src.shape[0]))
     

@@ -147,11 +147,11 @@ def create_matched_points(matches, locs1, locs2):
     # remove the first dummy value and return
     return matched_points[1:,:]
 
-def test_homography(im_src, im_dst, h):
+def test_homography(im_dst, im_src, h):
     # h = np.linalg.inv(h)
     # Warp destination image to source image based on homography
     # im_out = cv2.warpPerspective(im_dst, h, (im_dst.shape[1]+200,im_dst.shape[0]+200))
-    im_out = cv2.warpPerspective(im_dst, h, (im_src.shape[1],im_src.shape[0]))
+    im_out = cv2.warpPerspective(im_src, h, (im_dst.shape[1],im_dst.shape[0]))
 
     # Display images
     cv2.imshow("Source Image", im_src)
@@ -276,5 +276,5 @@ if __name__ == "__main__":
 
     print("homography matrix is \n", h)
 
+    # test_homography(destination, source)
     test_homography(image2_gray, image1_gray, np.linalg.inv(h))
-    # test_homography(image2_gray, image1_gray, h)
