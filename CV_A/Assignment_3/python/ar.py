@@ -31,12 +31,12 @@ def extract_frames_2(path):
         success,frame = cam.read()
 
         currentframe += 1
-        if success and currentframe%100 == 0 :
+        if success and currentframe%1 == 0 :
             # if video is still left continue creating images
             print("frame no. is", currentframe)
             frame = np.array(frame)
             frame_seq.append(frame)
-        elif currentframe == 502:
+        if currentframe == 10:
             break
     
     # Release all space and windows once done
@@ -44,12 +44,13 @@ def extract_frames_2(path):
 
     return frame_seq
 
-def crop_frames(dst_frames, book_shape):
-    # crop each dst_frame to match the src_frame's book
-    pass
+def crop_frames(dst_frames, crop_locs):
+    crop_frames = []
+    for frame in dst_frames:
+        crop_frames.append(frame[crop_locs[1]:crop_locs[3], crop_locs[0]:crop_locs[2]])
+    return crop_frames
 
-def warp_frames_and_composite(dst_frames, src_frames):
-
+def warp_frames_and_composite(ar_frames, book_frames):
     matches, locs1, locs2 = matchPics(image1, image2, opts)
 
     # invert the columns of locs1 and locs2
@@ -73,13 +74,21 @@ if __name__ == '__main__':
     # extract frames from videos
     video1_path = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/data/book.mov'
     video2_path = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/data/ar_source.mov'
-    dst_frames = extract_frames_2(video2_path)
-    src_frames = extract_frames_2(video1_path)
+    ar_frames = extract_frames_2(video2_path)
+    book_frames = extract_frames_2(video1_path)
 
     # crop frames of dst to fit src
-    # dst_frames = crop_frames(dst_frames, src_frames[0])
+    book_loc = (134, 84, 414, 424)
+    book_shape = (280, 340)
+    crop_locs_ar = (180, 10, 460, 350)
 
-    cv2.imshow("book_img", src_frames[0])
-    cv2.waitKey()
+    # crop ar_frames to act as our harry_potter template image
+    ar_frames = crop_frames(ar_frames, crop_locs_ar)
+    warp_frames_and_composite(ar_frames, book_frames)
+
+    # cv2.imshow("ar_img", ar_frames[0])
+    # cv2.waitKey()
+    # cv2.imshow("book_img", book_frames[0])
+    # cv2.waitKey()
     
     main(opts)
