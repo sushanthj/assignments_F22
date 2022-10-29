@@ -4,6 +4,7 @@ const int phasebuttonPin = 2;     // the number of the pushbutton pin
 const int red_light_pin= 9;
 const int green_light_pin = 10;
 const int blue_light_pin = 11;
+const int sensorPin = A0;
 
 // Variables will change:
 int redState = LOW;         // the current state of the output pin
@@ -17,6 +18,10 @@ int elementbuttonState;             // the current reading from the input pin
 int elementlastButtonState = HIGH;   // the previous reading from the input pin
 
 int phase_track = 0;
+int sensorValue = 0;
+int intensity = 0;
+
+char color;
 
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
@@ -25,6 +30,13 @@ unsigned long debounceDelay = 50;    // the debounce time; increase if the outpu
 
 unsigned long elementlastDebounceTime = 0;  // the last time the output pin was toggled
 unsigned long elementdebounceDelay = 50;    // the debounce time; increase if the output flickers
+
+template <typename T>
+Print& operator<<(Print& printer, T value)
+{
+    printer.print(value);
+    return printer;
+}
 
 void setup() {
   pinMode(red_light_pin, OUTPUT);
@@ -40,6 +52,7 @@ void loop() {
   // read the state of the switch into a local variable:
   int reading = digitalRead(phasebuttonPin);
   int element_reading = digitalRead(elementbuttonPin);
+  sensorValue = analogRead(sensorPin);
 
   // check to see if you just pressed the button
   // (i.e. the input went from LOW to HIGH), and you've waited long enough
@@ -61,8 +74,10 @@ void loop() {
 
       // only toggle the LED if the new button state is HIGH
       if (phasebuttonState == HIGH) {
+        // bring LED to off state as default
+        analog_color(255, 255, 255);
         // When phase change is detected do:
-        change_phase();        
+        change_phase();     
       }
     }
   }
@@ -94,6 +109,41 @@ void loop() {
 
   // save the reading. Next time through the loop, it'll be the lastButtonState:
   elementlastButtonState = element_reading;
+
+  if (phase_track == 1) {
+    Serial.println(sensorValue);
+    sensorValue = map(sensorValue, 0, 1023, 0, 255);
+    analog_color(sensorValue, sensorValue, sensorValue); 
+  }
+  
+  else if (phase_track  == 2) {
+    if (Serial.available() > 0) {
+    // read incoming serial data:
+    String inpdata = Serial.readStringUntil('\n');
+    inpdata.trim();
+    intensity = inpdata.substring(1).toInt();
+    color = inpdata.charAt(0);
+    if (intensity < 256 && intensity > -1 && color == 'r') {
+      Serial << "given color is " << color << " and given intensity is " << intensity;
+      Serial.println(" ");
+      analogWrite(red_light_pin, intensity);
+      }
+    else if (intensity < 256 && intensity > -1 && color == 'g') {
+      Serial << "given color is " << color << " and given intensity is " << intensity;
+      Serial.println(" ");
+      analogWrite(green_light_pin, intensity);
+      }
+    else if (intensity < 256 && intensity > -1 && color == 'b') {
+      Serial << "given color is " << color << " and given intensity is " << intensity;
+      Serial.println(" ");
+      analogWrite(blue_light_pin, intensity);
+      }
+    else {
+        Serial.println("Wrong value given");
+      }
+    }
+  }
+
 }
 
 void write_digital_state(int red_light_value, int green_light_value, int blue_light_value)
@@ -133,16 +183,14 @@ void change_phase() {
 }
 
 void statewise_actions() {
-  Serial.println("entered statewise actions");
   switch (phase_track) {
       case 0:
         Serial.println("Currently in State 1");
         write_digital_state(color_cycle[0], color_cycle[1], color_cycle[2]);
         cycle_colors();
         break;
-      case 1:
-        Serial.println("Currently in State 2");
-        // write_digital_state(HIGH, LOW, LOW);
+      case 1: 
+        Serial.println("Currently in State 2");  
         break;
       case 2:
         Serial.println("Currently in State 3");
@@ -171,4 +219,11 @@ void cycle_colors() {
     color_cycle[2] = HIGH;
   }
   
+}
+
+void analog_color(int red_light_value, int green_light_value, int blue_light_value)
+ {
+  analogWrite(red_light_pin, red_light_value);
+  analogWrite(green_light_pin, green_light_value);
+  analogWrite(blue_light_pin, blue_light_value);
 }
