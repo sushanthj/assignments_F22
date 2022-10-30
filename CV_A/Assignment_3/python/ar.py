@@ -74,21 +74,29 @@ if __name__ == '__main__':
     # extract frames from videos
     video1_path = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/data/book.mov'
     video2_path = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/data/ar_source.mov'
+    homography_ref = cv2.imread('../data/cv_cover.jpg')
     ar_frames = extract_frames_2(video2_path)
     book_frames = extract_frames_2(video1_path)
 
-    # crop frames of dst to fit src
+    # find where book is in frame 1
     book_loc = (134, 84, 414, 424)
+    # calculate size of book in pixels
     book_shape = (280, 340)
+    # crop the AR video frames according to the book size
     crop_locs_ar = (180, 10, 460, 350)
+    # resize homography_ref book to same size as AR crop
+    homography_ref = cv2.resize(homography_ref, book_shape)
+
 
     # crop ar_frames to act as our harry_potter template image
     ar_frames = crop_frames(ar_frames, crop_locs_ar)
-    warp_frames_and_composite(ar_frames, book_frames)
+    # warp_frames_and_composite(ar_frames, book_frames)
 
-    # cv2.imshow("ar_img", ar_frames[0])
-    # cv2.waitKey()
-    # cv2.imshow("book_img", book_frames[0])
-    # cv2.waitKey()
+    cv2.imshow("ar_img", ar_frames[0])
+    cv2.waitKey()
+    cv2.imshow("book_img", book_frames[0])
+    cv2.waitKey()
+    cv2.imshow("template reshaped", homography_ref)
+    cv2.waitKey()
     
     main(opts)

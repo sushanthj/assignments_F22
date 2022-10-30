@@ -214,10 +214,12 @@ def compute_inliers(h, x1, x2, tol):
 
 
 def compositeH(H2to1, template, img):
+    output_shape = (img.shape[1],img.shape[0])
+    h2,w2 = img.shape[:2]
     # destination_img = img
     # source_img = template
     h = np.linalg.inv(H2to1)
-    # im_out = cv2.warpPerspective(im_dst, h, (im_src.shape[1],im_src.shape[0]))
+    H_t, output_shape, t = translation_correction(template, img, h)
     
     # Create a composite image after warping the template image on top
     # of the image using the homography
@@ -230,15 +232,58 @@ def compositeH(H2to1, template, img):
     mask = np.ones((template.shape[0], template.shape[1]))*255
     mask = np.stack((mask, mask, mask), axis=2)
 
-    # Warp mask by appropriate homography
-    warped_mask = cv2.warpPerspective(mask, h, (img.shape[1],img.shape[0]))
-
     # Warp template by appropriate homography
-    warped_template = cv2.warpPerspective(template, h, (img.shape[1],img.shape[0]))
+    warped_template = cv2.warpPerspective(template, h, output_shape)
 
-    # Use mask to combine the warped template and the image
-    composite_img = np.where(warped_mask, warped_template, img)
+    if np.all(H_t == 1):
+        # Warp mask by appropriate homography
+        warped_mask = cv2.warpPerspective(mask, h, output_shape)
+        # Use mask to combine the warped template and the image
+        composite_img = np.where(warped_mask, warped_template, img)
+    else:
+        h = np.matmul(H_t, h)
+        warped_template[t[1]:(h2+t[1]),t[0]:(w2+t[0]),:] = img[:,:,:]
+        composite_img = warped_template
+        cv2.imshow("warped template", warped_template)
+        cv2.waitKey()
     
     return composite_img
 
+def translation_correction(template, img, h):
+    h1,w1 = template.shape[:2]
+    h2,w2 = img.shape[:2]
 
+    # build corresp points to check for translation
+    row1 = np.array([0,0])
+    row2 = np.array([h1,0])
+    row3 = np.array([0,w1])
+    row4 = np.array([h1, w1])
+
+    x1 = np.stack((row1, row2, row3, row4), axis=0)
+    x1_extd = (np.append(x1, np.ones((x1.shape[0],1)), axis=1))
+    x2_est = np.zeros((x1_extd.shape), dtype=x1_extd.dtype)
+
+    for i in range(x1.shape[0]):
+        x2_est[i,:] = h @ x1_extd[i,:]
+    
+    x2_est = x2_est/np.expand_dims(x2_est[:,2], axis=1)
+
+    max_arr = np.max(x2_est.astype(int), axis=0)
+    min_arr = np.min(x2_est.astype(int), axis=0)
+
+    if (max_arr[0] <= h1) and (max_arr[1] <= w1) and (min_arr[0] >= 0) and (min_arr[1 >= 0]):
+        H_t = np.ones((3,3))
+        output_shape = (img.shape[1],img.shape[0])
+        t = (0,0)
+    else:
+        t = np.array([-min_arr[0],-min_arr[1]])
+        H_t = np.array([[1,0,t[0]],[0,1,t[1]],[0,0,1]]) # translate
+        # shape_arr = max_arr-min_arr
+        # output_shape = (shape_arr[1], shape_arr[0])
+        output_shape = (w2+t[0], h2+t[1]+50)
+
+        print("H_t is", H_t)
+        print("output shape is", output_shape)
+        print("t is", t)
+    
+    return H_t, output_shape, t
