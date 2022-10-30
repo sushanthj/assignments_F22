@@ -6,6 +6,7 @@ import skimage.color
 from opts import get_opts
 from matchPics import matchPics
 import HarryPotterize
+from planarH import *
 
 #Import necessary functions
 
@@ -31,12 +32,12 @@ def extract_frames_2(path):
         success,frame = cam.read()
 
         currentframe += 1
-        if success and currentframe%1 == 0 :
+        if success and currentframe%10 == 0 :
             # if video is still left continue creating images
             print("frame no. is", currentframe)
             frame = np.array(frame)
             frame_seq.append(frame)
-        if currentframe == 10:
+        if currentframe == 100:
             break
     
     # Release all space and windows once done
@@ -50,23 +51,24 @@ def crop_frames(dst_frames, crop_locs):
         crop_frames.append(frame[crop_locs[1]:crop_locs[3], crop_locs[0]:crop_locs[2]])
     return crop_frames
 
-def warp_frames_and_composite(ar_frames, book_frames):
-    matches, locs1, locs2 = matchPics(image1, image2, opts)
+def warp_frames_and_composite(ar_frames, book_frames, homography_ref):
+    for i in range(len(book_frames)):
+        matches, locs1, locs2 = matchPics(homography_ref, book_frames[i], opts)
 
-    # invert the columns of locs1 and locs2
-    locs1[:, [1, 0]] = locs1[:, [0, 1]]
-    locs2[:, [1, 0]] = locs2[:, [0, 1]]
+        # invert the columns of locs1 and locs2
+        locs1[:, [1, 0]] = locs1[:, [0, 1]]
+        locs2[:, [1, 0]] = locs2[:, [0, 1]]
 
-    matched_points = create_matched_points(matches, locs1, locs2)
-    h, inlier = computeH_ransac(matched_points[:,0:2], matched_points[:,2:], opts)
+        matched_points = create_matched_points(matches, locs1, locs2)
+        h, inlier = computeH_ransac(matched_points[:,0:2], matched_points[:,2:], opts)
 
-    print("homography matrix is \n", h)
-    
-    composite_img = compositeH(h, template_img, image2)
+        print("homography matrix is \n", h)
+        
+        composite_img = compositeH(h, ar_frames[i], book_frames[i])
 
-    # Display images
-    cv2.imshow("Composite Image :)", composite_img)
-    cv2.waitKey()
+        # Display images
+        cv2.imshow("Composite Image :)", composite_img)
+        cv2.waitKey()
 
 if __name__ == '__main__':
     opts = get_opts()
@@ -87,10 +89,11 @@ if __name__ == '__main__':
     # resize homography_ref book to same size as AR crop
     homography_ref = cv2.resize(homography_ref, book_shape)
 
-
     # crop ar_frames to act as our harry_potter template image
     ar_frames = crop_frames(ar_frames, crop_locs_ar)
     # warp_frames_and_composite(ar_frames, book_frames)
+
+    warp_frames_and_composite(ar_frames, book_frames, homography_ref)
 
     cv2.imshow("ar_img", ar_frames[0])
     cv2.waitKey()

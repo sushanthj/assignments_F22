@@ -1,5 +1,6 @@
 from copy import deepcopy
 from dataclasses import replace
+from platform import python_branch
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -234,14 +235,7 @@ def compositeH(H2to1, template, img):
     warped_mask = cv2.warpPerspective(mask, h, output_shape)
 
     # Warp template by appropriate homography
-    cv2.imshow("template image", template)
-    cv2.waitKey()
-    cv2.imshow("destination image", img)
-    cv2.waitKey()
     warped_template = cv2.warpPerspective(template, h, output_shape)
-
-    cv2.imshow("warped template", warped_template)
-    cv2.waitKey()
 
     # Use mask to combine the warped template and the image
     composite_img = np.where(warped_mask, warped_template, img)
