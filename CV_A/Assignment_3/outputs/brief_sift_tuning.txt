@@ -1,1 +1,3 @@
 -sigma 0.03 --ratio 0.52 seems best
+
+python3 HarryPotterize.py --sigma 0.03 --ratio 0.52 --inlier_tol 2 --max_iter 1000

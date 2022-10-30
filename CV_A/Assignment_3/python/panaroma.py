@@ -45,7 +45,8 @@ def main(opts):
 
     print("homography matrix is \n", h)
     # compositeH (h, source, destination)
-    composite_img = compositeH(h, image1, image2)
+    composite_img = panorama(h, image1, image2)
+    # composite_img = panorama_composite(h, image2, image1)
 
     cv2.imwrite('/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/outputs/pano_image_2.png', composite_img)
     cv2.imshow("pano image", composite_img)
