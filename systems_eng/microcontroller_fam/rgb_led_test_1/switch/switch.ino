@@ -5,6 +5,7 @@ const int red_light_pin= 9;
 const int green_light_pin = 10;
 const int blue_light_pin = 11;
 const int sensorPin = A0;
+const int intermediary_pin = 4;
 
 // Variables will change:
 int redState = LOW;         // the current state of the output pin
@@ -22,6 +23,7 @@ int sensorValue = 0;
 int intensity = 0;
 
 char color;
+volatile int state = LOW;
 
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
@@ -43,14 +45,21 @@ void setup() {
   pinMode(green_light_pin, OUTPUT);
   pinMode(blue_light_pin, OUTPUT);
   // initialize the pushbutton pin as an input:
-  pinMode(phasebuttonPin, INPUT);
+  // pinMode(phasebuttonPin, INPUT);
+  pinMode(phasebuttonPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(phasebuttonPin), change_state, CHANGE);
   pinMode(elementbuttonPin, INPUT);
   Serial.begin(9600);
 }
 
+void change_state(){
+  state = !state;
+}
+
 void loop() {
   // read the state of the switch into a local variable:
-  int reading = digitalRead(phasebuttonPin);
+  // int reading = digitalRead(intermediary_pin);
+  int reading = state;
   int element_reading = digitalRead(elementbuttonPin);
   sensorValue = analogRead(sensorPin);
 

@@ -15,7 +15,6 @@ def displayMatched(opts, image1, image2):
     opts: Command line args
     image1, image2: Source images
     """
-
     matches, locs1, locs2 = matchPics(image1, image2, opts)
 
     # display matched features
@@ -25,7 +24,6 @@ if __name__ == "__main__":
 
     opts = get_opts()
     image1 = cv2.imread('../data/cv_cover.jpg')
-    # image2 = ndimage.rotate(image1, 10)
     image2 = cv2.imread('../data/cv_desk.png')
 
     displayMatched(opts, image1, image2)

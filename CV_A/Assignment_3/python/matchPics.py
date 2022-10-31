@@ -21,7 +21,7 @@ def matchPics(I1, I2, opts):
         matches: List of indices of matched features across I1, I2 [p x 2]
         locs1, locs2: Pixel coordinates of matches [N x 2]
         """
-        
+        print("computing image matches")
         ratio = opts.ratio  #'ratio for BRIEF feature descriptor'
         sigma = opts.sigma  #'threshold for corner detection using FAST feature detector'
         
@@ -46,5 +46,6 @@ def matchPics(I1, I2, opts):
 
         # TODO: Match features using the descriptors
         matches = briefMatch(desc1, desc2, ratio)
+        print(f'Computed {matches.shape[0]} matches successfully')
 
         return matches, locs1, locs2

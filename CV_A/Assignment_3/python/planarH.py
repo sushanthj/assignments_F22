@@ -12,6 +12,7 @@ from scipy.spatial import distance
 from matchPics import matchPics
 from helper import plotMatches
 from opts import get_opts
+from tqdm import tqdm
 
 
 def computeH(x1, x2):
@@ -142,7 +143,8 @@ def computeH_ransac(locs1, locs2, opts):
     final_distance_error = 10000
 
     #? Create a boolean vector of length N where 1 = inlier and 0 = outlier
-    for i in range(max_iters):
+    print("Computing RANSAC")
+    for i in tqdm(range(max_iters)):
         test_locs1 = deepcopy(locs1)
         test_locs2 = deepcopy(locs2)
         # chose a random sample of 4 points to find H
@@ -180,15 +182,11 @@ def computeH_ransac(locs1, locs2, opts):
     print("final inlier's cumulative distance error is", final_distance_error)
 
     delete_indexes = np.where(final_inliers==0)
-    print("delete indexes is", delete_indexes)
     final_locs_1 = np.delete(final_test_locs1, delete_indexes, axis=0)
     final_locs_2 = np.delete(final_test_locs2, delete_indexes, axis=0)
 
     final_locs_1 = np.vstack((final_locs_1, final_corresp_points_1))
     final_locs_2 = np.vstack((final_locs_2, final_corresp_points_2))
-
-    print("refined_locs1 shape is", final_locs_1.shape)
-    print("refined_locs2 shape is", final_locs_2.shape)
 
     bestH2to1 = computeH_norm(final_locs_1, final_locs_2)
     return bestH2to1, final_inliers
