@@ -102,15 +102,19 @@ def compile_video(out_dir):
     frames = []
     
     # hard set FPS to 30
-    FPS = 10
+    FPS = 30
 
     # output video path
     out_video_path = os.path.join(out_dir, 'ar_video.avi')
 
+    # create dummny list to store each frame
+    frames = list(range(0, len(os.listdir(out_dir))))
+    
     # compile the frames
     for img_name in os.listdir(out_dir):
         if img_name.endswith(".jpeg"):
-            frames.append(cv2.imread(os.path.join(out_dir, img_name)))
+            frame_no = int(img_name.split(".")[0].split("_")[1])
+            frames[frame_no]= (cv2.imread(os.path.join(out_dir, img_name)))
 
     h, w, _ = frames[0].shape
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -132,15 +136,6 @@ def ar_each_frame(ar_frame, book_frame, i, pack):
     locs2[:, [1, 0]] = locs2[:, [0, 1]]
     
     matched_points = create_matched_points(matches, locs1, locs2)
-
-    # if i != 510:
-    # cv2.imshow("ar frame", ar_frame)
-    # cv2.waitKey()
-    # print("the number of matched points was", matched_points[0:10,:])
-    # cv2.imshow("book frame", book_frame)
-    # cv2.waitKey()
-    # cv2.imshow("homography ref frame", homography_ref)
-    # cv2.waitKey()
 
     h, inlier = computeH_ransac(matched_points[:,0:2], matched_points[:,2:], opts)
 
