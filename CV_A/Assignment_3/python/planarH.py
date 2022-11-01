@@ -263,7 +263,6 @@ def panorama(H2to1, template, img):
     row4 = np.array([h1, w1])
 
     x1 = np.stack((row1, row2, row3, row4), axis=0)
-    print("x1 is", x1)
 
     x1_extd = (np.append(x1, np.ones((x1.shape[0],1)), axis=1))
     x2_est = np.zeros((x1_extd.shape), dtype=x1_extd.dtype)
@@ -272,15 +271,9 @@ def panorama(H2to1, template, img):
         x2_est[i,:] = h @ x1_extd[i,:]
     
     x2_est = x2_est/np.expand_dims(x2_est[:,2], axis=1)
-    
-    print("x2 shape is", x2_est.shape)
-    print("x2 is", x2_est)
 
     max_arr = np.max(x2_est.astype(int), axis=0)
     min_arr = np.min(x2_est.astype(int), axis=0)
-
-    print("max arr is", max_arr)
-    print("min arr is", min_arr)
 
     t = np.array([-min_arr[0],-min_arr[1]])
     H_t = np.array([[1,0,t[0]],[0,1,t[1]],[0,0,1]]) # translate
@@ -301,8 +294,10 @@ def panorama(H2to1, template, img):
     cv2.waitKey()
 
     warped_template[t[1]:(h2+t[1]),t[0]:(w2+t[0]),:] = img[:,:,:]
+
+    final_image = warped_template[0:h2,:,:]
     
-    return warped_template
+    return final_image
 
 def panorama_composite(H2to1, template, img):
     output_shape = (img.shape[1]+200,img.shape[0]+200)
@@ -332,5 +327,7 @@ def panorama_composite(H2to1, template, img):
 
     # Use mask to combine the warped template and the image
     composite_img = np.where(warped_mask, warped_template, img_padded)
+
+    
     
     return composite_img
