@@ -294,10 +294,8 @@ def panorama(H2to1, template, img):
     cv2.waitKey()
 
     warped_template[t[1]:(h2+t[1]),t[0]:(w2+t[0]),:] = img[:,:,:]
-
-    final_image = warped_template[0:h2,:,:]
     
-    return final_image
+    return warped_template
 
 def panorama_composite(H2to1, template, img):
     output_shape = (img.shape[1]+200,img.shape[0]+200)
@@ -328,6 +326,6 @@ def panorama_composite(H2to1, template, img):
     # Use mask to combine the warped template and the image
     composite_img = np.where(warped_mask, warped_template, img_padded)
 
-    
+
     
     return composite_img
