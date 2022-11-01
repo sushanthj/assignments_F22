@@ -163,15 +163,19 @@ def computeH_ransac(locs1, locs2, opts):
         
         test_locs1 = np.delete(test_locs1, rand_index, axis=0)
         test_locs2 = np.delete(test_locs2, rand_index, axis=0)
+        final_test_locs1 = test_locs1
+        final_test_locs2 = test_locs2
             
         correspondence_points_1 = np.vstack(rand_points_1)
         correspondence_points_2 = np.vstack(rand_points_2)
+        final_corresp_points_1 = correspondence_points_1
+        final_corresp_points_2 = correspondence_points_2
 
         ref_H = computeH_norm(correspondence_points_1, correspondence_points_2)
         inliers, inlier_count, distance_error, error_state = compute_inliers(ref_H, test_locs1, test_locs2, inlier_tol)
 
         if error_state == -1:
-            break
+            continue
         
         elif (inlier_count > final_inlier_count) and (distance_error < final_distance_error):
             final_inlier_count = inlier_count
