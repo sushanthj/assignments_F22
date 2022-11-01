@@ -141,6 +141,7 @@ def computeH_ransac(locs1, locs2, opts):
     # define a container for keeping track of inlier counts
     final_inlier_count = 0
     final_distance_error = 10000
+    final_inliers = np.array([1,1,1,])
 
     #? Create a boolean vector of length N where 1 = inlier and 0 = outlier
     print("Computing RANSAC")
@@ -149,6 +150,7 @@ def computeH_ransac(locs1, locs2, opts):
         test_locs2 = deepcopy(locs2)
         # chose a random sample of 4 points to find H
         rand_index = []
+        error_state = 1
         
         rand_index = random.sample(range(int(locs1.shape[0])),k=4)
         
@@ -166,9 +168,12 @@ def computeH_ransac(locs1, locs2, opts):
         correspondence_points_2 = np.vstack(rand_points_2)
 
         ref_H = computeH_norm(correspondence_points_1, correspondence_points_2)
-        inliers, inlier_count, distance_error = compute_inliers(ref_H, test_locs1, test_locs2, inlier_tol)
+        inliers, inlier_count, distance_error, error_state = compute_inliers(ref_H, test_locs1, test_locs2, inlier_tol)
 
-        if (inlier_count > final_inlier_count) and (distance_error < final_distance_error):
+        if error_state == -1:
+            break
+        
+        elif (inlier_count > final_inlier_count) and (distance_error < final_distance_error):
             final_inlier_count = inlier_count
             final_inliers = inliers
             final_corresp_points_1 = correspondence_points_1
@@ -189,27 +194,31 @@ def computeH_ransac(locs1, locs2, opts):
     final_locs_2 = np.vstack((final_locs_2, final_corresp_points_2))
 
     bestH2to1 = computeH_norm(final_locs_1, final_locs_2)
-    return bestH2to1, final_inliers
+    return bestH2to1, error_state
 
 def compute_inliers(h, x1, x2, tol):
     # take H inv to map points in x1 to x2
-    H = np.linalg.inv(h)
+    try:
+        H = np.linalg.inv(h)
 
-    x2_extd = np.append(x2, np.ones((x2.shape[0],1)), axis=1)
-    x1_extd = (np.append(x1, np.ones((x1.shape[0],1)), axis=1))
-    x2_est = np.zeros((x2_extd.shape), dtype=x2_extd.dtype)
+        x2_extd = np.append(x2, np.ones((x2.shape[0],1)), axis=1)
+        x1_extd = (np.append(x1, np.ones((x1.shape[0],1)), axis=1))
+        x2_est = np.zeros((x2_extd.shape), dtype=x2_extd.dtype)
 
-    for i in range(x1.shape[0]):
-        x2_est[i,:] = H @ x1_extd[i,:]
+        for i in range(x1.shape[0]):
+            x2_est[i,:] = H @ x1_extd[i,:]
+        
+        x2_est = x2_est/np.expand_dims(x2_est[:,2], axis=1)
+        dist_error = np.linalg.norm((x2_extd-x2_est),axis=1)
+        
+        # print("dist error is", dist_error)
+        inliers = np.where((dist_error < tol), 1, 0)
+        inlier_count = np.count_nonzero(inliers == 1)
+        
+        return inliers, inlier_count, np.sum(dist_error), 1
     
-    x2_est = x2_est/np.expand_dims(x2_est[:,2], axis=1)
-    dist_error = np.linalg.norm((x2_extd-x2_est),axis=1)
-    
-    # print("dist error is", dist_error)
-    inliers = np.where((dist_error < tol), 1, 0)
-    inlier_count = np.count_nonzero(inliers == 1)
-    
-    return inliers, inlier_count, np.sum(dist_error)
+    except np.linalg.LinAlgError:
+        return [0,0], 0, 0, -1
 
 
 def compositeH(H2to1, template, img):
