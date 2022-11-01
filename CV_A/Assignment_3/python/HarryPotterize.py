@@ -26,7 +26,7 @@ def warpImage(opts):
     locs2[:, [1, 0]] = locs2[:, [0, 1]]
 
     matched_points = create_matched_points(matches, locs1, locs2)
-    h, error_state = computeH_ransac(matched_points[:,0:2], matched_points[:,2:], opts)
+    h, inlier = computeH_ransac(matched_points[:,0:2], matched_points[:,2:], opts)
 
     print("homography matrix is \n", h)
     

@@ -142,14 +142,13 @@ def ar_each_frame(ar_frame, book_frame, i, pack):
     # cv2.imshow("homography ref frame", homography_ref)
     # cv2.waitKey()
 
-    h, error_state = computeH_ransac(matched_points[:,0:2], matched_points[:,2:], opts)
+    h, inlier = computeH_ransac(matched_points[:,0:2], matched_points[:,2:], opts)
 
-    if error_state != -1:
-        print("homography matrix is \n", h)
-        
-        composite_img = compositeH(h, ar_frame, book_frame)
-        save_path = os.path.join(out_dir, 'frame' + '_' + str(i) + '.jpeg')
-        cv2.imwrite(save_path, composite_img)
+    print("homography matrix is \n", h)
+    
+    composite_img = compositeH(h, ar_frame, book_frame)
+    save_path = os.path.join(out_dir, 'frame' + '_' + str(i) + '.jpeg')
+    cv2.imwrite(save_path, composite_img)
 
 def check_and_create_directory(dir_path, create):
     """
