@@ -12,25 +12,6 @@ def main(opts):
     image1 = cv2.imread(pano_left)
     image2 = cv2.imread(pano_right)
 
-    # row1 = np.array([controlpointlist[0]['img1_x'], controlpointlist[0]['img1_y']], dtype=np.int8)
-    # row2 = np.array([controlpointlist[1]['img1_x'], controlpointlist[1]['img1_y']], dtype=np.int8)
-    # row3 = np.array([controlpointlist[2]['img1_x'], controlpointlist[2]['img1_y']], dtype=np.int8)
-    # row4 = np.array([controlpointlist[3]['img1_x'], controlpointlist[3]['img1_y']], dtype=np.int8)
-
-    # row5 = np.array([controlpointlist[0]['img2_x'], controlpointlist[0]['img2_y']], dtype=np.int8)
-    # row6 = np.array([controlpointlist[1]['img2_x'], controlpointlist[1]['img2_y']], dtype=np.int8)
-    # row7 = np.array([controlpointlist[2]['img2_x'], controlpointlist[2]['img2_y']], dtype=np.int8)
-    # row8 = np.array([controlpointlist[3]['img2_x'], controlpointlist[3]['img2_y']], dtype=np.int8)
-
-    # x1 = np.stack((row1, row2, row3, row4), axis=0)
-    # x2 = np.stack((row5, row6, row7, row8), axis=0)
-
-    # print("x1 is", x1)
-    # print("x2 is", x2)
-
-    # h = computeH_norm(x1, x2)
-    # h = np.linalg.inv(h)
-
     image1 = cv2.resize(image1, (800, 450), interpolation=cv2.INTER_LINEAR)
     image2 = cv2.resize(image2, (800, 450), interpolation=cv2.INTER_LINEAR)
 
@@ -47,23 +28,15 @@ def main(opts):
     # compositeH (h, source, destination)
     # composite_img = panorama(h, image1, image2)
     composite_img = panorama_composite(h, image2, image1)
+    composite_img = trim_images(composite_img, image2)
 
     cv2.imwrite('/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/outputs/pano_image_2.png', composite_img)
     cv2.imshow("pano image", composite_img)
     cv2.waitKey()
+    
     return image1, image2, composite_img
-
-def black_pixel_removal():
-    pano_right = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/data/b.jpg'
-    image2 = cv2.imread(pano_right)
-    image2 = cv2.resize(image2, (800, 450), interpolation=cv2.INTER_LINEAR)
-    img = cv2.imread('/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/outputs/pano_image_2.png')
-    cv2.imshow("pano image", img)
-    cv2.waitKey()
-    trim_images(img, image2)
 
 
 if __name__ == '__main__':
     opts = get_opts()
-    # ref_img_1, ref_img_2, pano_img = main(opts)
-    black_pixel_removal()
+    ref_img_1, ref_img_2, pano_img = main(opts)

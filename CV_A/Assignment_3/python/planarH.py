@@ -16,8 +16,6 @@ from tqdm import tqdm
 
 
 def computeH(x1, x2):
-    #Q2.2.1
-    
     """
     Computes the homography based on 
     matching points in both images
@@ -129,6 +127,20 @@ def create_matched_points(matches, locs1, locs2):
     return matched_points
 
 def computeH_ransac(locs1, locs2, opts):
+    """
+    Every iteration we init a Homography matrix using 4 corresponding
+    points and calculate number of inliers. Finally use the Homography
+    matrix which had max number of inliers (and these inliers as well)
+    to find the final Homography matrix
+    Args:
+        locs1: location of matched points in image1
+        locs2: location of matched points in image2
+        opts: user inputs used for distance tolerance in ransac
+
+    Returns:
+        bestH2to1     : The homography matrix with max number of inliers
+        final_inliers : Final list of inliers considered for homography
+    """
     #Q2.2.3
     #Compute the best fitting homography given a list of matching points
     
@@ -166,7 +178,10 @@ def computeH_ransac(locs1, locs2, opts):
         correspondence_points_2 = np.vstack(rand_points_2)
 
         ref_H = computeH_norm(correspondence_points_1, correspondence_points_2)
-        inliers, inlier_count, distance_error, error_state = compute_inliers(ref_H, test_locs1, test_locs2, inlier_tol)
+        inliers, inlier_count, distance_error, error_state = compute_inliers(ref_H, 
+                                                                            test_locs1,
+                                                                            test_locs2, 
+                                                                            inlier_tol)
 
         if error_state == 1:
             continue
@@ -181,9 +196,9 @@ def computeH_ransac(locs1, locs2, opts):
             final_test_locs2 = test_locs2
 
     if final_distance_error != 10000:
-        print("original point count is", locs1.shape[0])
-        print("final inlier count is", final_inlier_count)
-        print("final inlier's cumulative distance error is", final_distance_error)
+        # print("original point count is", locs1.shape[0])
+        # print("final inlier count is", final_inlier_count)
+        # print("final inlier's cumulative distance error is", final_distance_error)
 
         delete_indexes = np.where(final_inliers==0)
         final_locs_1 = np.delete(final_test_locs1, delete_indexes, axis=0)
@@ -200,6 +215,21 @@ def computeH_ransac(locs1, locs2, opts):
         return bestH2to1, 0
 
 def compute_inliers(h, x1, x2, tol):
+    """
+    Compute the number of inliers for a given
+    homography matrix
+    Args:
+        h: Homography matrix
+        x1 : matched points in image 1
+        x2 : matched points in image 2
+        tol: tolerance value to check for inliers
+
+    Returns:
+        inliers         : indexes of x1 or x2 which are inliers
+        inlier_count    : number of total inliers
+        dist_error_sum  : Cumulative sum of errors in reprojection error calc
+        flag            : flag to indicate if H was invertible or not
+    """
     # take H inv to map points in x1 to x2
     try:
         H = np.linalg.inv(h)
@@ -224,17 +254,22 @@ def compute_inliers(h, x1, x2, tol):
 
 
 def compositeH(H2to1, template, img):
+    """
+    Create a composite image after warping the template image on top
+    of the image using the homography
+
+    Args:
+        H2to1 : Existing(already found) homography matrix
+        template: Harry Potter (template image)
+        img: Base image onto which we overlay Harry Potter image
+
+    Returns:
+        composite_img: Base image with overlayed Harry Potter cover
+    """
     output_shape = (img.shape[1],img.shape[0])
     # destination_img = img
     # source_img = template
     h = np.linalg.inv(H2to1)
-    
-    # Create a composite image after warping the template image on top
-    # of the image using the homography
-
-    # Note that the homography we compute is from the image to the template;
-    # x_template = H2to1*x_photo
-    # For warping the template to the image, we need to invert it.
 
     # Create mask of same size as template
     mask = np.ones((template.shape[0], template.shape[1]))*255
@@ -298,12 +333,23 @@ def panorama(H2to1, template, img):
     return warped_template
 
 def panorama_composite(H2to1, template, img):
-    output_shape = (img.shape[1]+250,img.shape[0]+250)
+    """
+    Stitch two images together to form a panorama
+
+    Args:
+        H2to1: Homography Matrix
+        template: The pano_right image
+        img: The pano_left image
+
+    Returns:
+        composite_img: Stitched image (panorama)
+    """
+    output_shape = (img.shape[1]+240,img.shape[0]+240)
     # destination_img = img
     # source_img = template
     h = H2to1
     
-    img_padded = np.zeros((img.shape[0]+200,img.shape[1]+200,3), dtype=img.dtype)
+    img_padded = np.zeros((img.shape[0]+240,img.shape[1]+240,3), dtype=img.dtype)
     img_padded[0:img.shape[0], 0:img.shape[1], :] = img[:,:,:]
 
     # Create mask of same size as template
@@ -316,7 +362,7 @@ def panorama_composite(H2to1, template, img):
     # Warp template by appropriate homography
     cv2.imshow("template image", template)
     cv2.waitKey()
-    cv2.imshow("destination image", img_padded)
+    cv2.imshow("destination image", img)
     cv2.waitKey()
     warped_template = cv2.warpPerspective(template, h, output_shape)
 
@@ -329,6 +375,14 @@ def panorama_composite(H2to1, template, img):
     return composite_img
 
 def trim_images(img, ref_img):
+    """
+    Args:
+        img: panorama image to be trimmed
+        ref_img: reference image to get dimensions
+
+    Returns:
+        trimmed_img: trimmed panorama image
+    """
     desired_height, _, _ = ref_img.shape
     _, desired_width, _ = img.shape
 

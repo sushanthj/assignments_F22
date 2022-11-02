@@ -6,10 +6,6 @@ from planarH import *
 from opts import get_opts
 from matchPics import matchPics
 
-# Import necessary functions
-
-# Q2.2.4
-
 def warpImage(opts):
     image1 = cv2.imread('../data/cv_cover.jpg')
     image2 = cv2.imread('../data/cv_desk.png')
