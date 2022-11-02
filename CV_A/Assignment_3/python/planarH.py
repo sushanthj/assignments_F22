@@ -298,7 +298,7 @@ def panorama(H2to1, template, img):
     return warped_template
 
 def panorama_composite(H2to1, template, img):
-    output_shape = (img.shape[1]+200,img.shape[0]+200)
+    output_shape = (img.shape[1]+250,img.shape[0]+250)
     # destination_img = img
     # source_img = template
     h = H2to1
@@ -325,7 +325,19 @@ def panorama_composite(H2to1, template, img):
 
     # Use mask to combine the warped template and the image
     composite_img = np.where(warped_mask, warped_template, img_padded)
-
-
     
     return composite_img
+
+def trim_images(img, ref_img):
+    desired_height, _, _ = ref_img.shape
+    _, desired_width, _ = img.shape
+
+    trimmed_img = img[0:desired_height, 0:desired_width, :]
+    cv2.imshow("trimmed image", trimmed_img)
+    cv2.waitKey()
+    cv2.imwrite('/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/outputs/pano_trim_image_2.png', trimmed_img)
+
+    return trimmed_img
+    
+
+

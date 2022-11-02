@@ -51,8 +51,19 @@ def main(opts):
     cv2.imwrite('/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/outputs/pano_image_2.png', composite_img)
     cv2.imshow("pano image", composite_img)
     cv2.waitKey()
+    return image1, image2, composite_img
+
+def black_pixel_removal():
+    pano_right = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/data/b.jpg'
+    image2 = cv2.imread(pano_right)
+    image2 = cv2.resize(image2, (800, 450), interpolation=cv2.INTER_LINEAR)
+    img = cv2.imread('/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/outputs/pano_image_2.png')
+    cv2.imshow("pano image", img)
+    cv2.waitKey()
+    trim_images(img, image2)
 
 
 if __name__ == '__main__':
     opts = get_opts()
-    main(opts)
+    # ref_img_1, ref_img_2, pano_img = main(opts)
+    black_pixel_removal()
