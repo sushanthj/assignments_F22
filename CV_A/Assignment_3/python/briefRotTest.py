@@ -6,10 +6,12 @@ from matchPics import matchPics
 from helper import plotMatches
 from opts import get_opts
 
-# Q2.1.6
-
 def rotTest(opts):
-
+    """
+    Test how BRIEF descriptor matches images with in-plane rotation
+    Args:
+        compute histogram for images with in-plane rotation: 
+    """
     I1_orig = cv2.imread('../data/cv_cover.jpg')
     range_obj_1 = range(36)
     range_obj_2 = range(1,9,3)
@@ -18,7 +20,13 @@ def rotTest(opts):
 
 
 def compute_histogram_and_display(I1_orig, range_object, display):
-    
+    """
+    Compute histogram based on given image rotation ranges
+    Args:
+        I1_orig: Image to conduct homography on
+        range_object: range of rotation values
+        display: flag to display each rotated image homography
+    """
     # container to store the count of matches for each orientation
     match_counts = np.array([])
     rotations = np.array([])

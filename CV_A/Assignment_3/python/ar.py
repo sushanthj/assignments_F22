@@ -95,7 +95,7 @@ def warp_frames_and_composite(ar_frames, book_frames, homography_ref, out_dir):
 def compile_video(out_dir):
     """
     Writes frames to an mp4 video file
-    :param file_path: Path to output video, must end with .mp4
+    param file_path: Path to output video, must end with .mp4
     """
 
     # create container for frames which will hold all images

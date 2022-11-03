@@ -7,6 +7,11 @@ from opts import get_opts
 from matchPics import matchPics
 
 def warpImage(opts):
+    """
+    Warp template image based on homography transform
+    Args:
+        opts: user inputs
+    """
     image1 = cv2.imread('../data/cv_cover.jpg')
     image2 = cv2.imread('../data/cv_desk.png')
     template_img = cv2.imread('../data/hp_cover.jpg')
@@ -34,7 +39,7 @@ def warpImage(opts):
     cv2.waitKey()
 
 if __name__ == "__main__":
-
+    
     opts = get_opts()
     warpImage(opts)
 

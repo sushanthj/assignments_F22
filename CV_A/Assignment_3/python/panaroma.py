@@ -6,7 +6,17 @@ from planarH import *
 from opts import get_opts
 from matchPics import matchPics
 
-def main(opts):
+def panorama_computation(opts):
+    """
+    Compute Panorama from two input images
+    Args:
+        opts: user inputs
+
+    Returns:
+        image1        : pano left image
+        image2        : pano right image
+        composite_img : stitched panorama image
+    """
     pano_left = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/data/a.jpg'
     pano_right = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/data/b.jpg'
     image1 = cv2.imread(pano_left)
@@ -39,4 +49,4 @@ def main(opts):
 
 if __name__ == '__main__':
     opts = get_opts()
-    ref_img_1, ref_img_2, pano_img = main(opts)
+    ref_img_1, ref_img_2, pano_img = panorama_computation(opts)
