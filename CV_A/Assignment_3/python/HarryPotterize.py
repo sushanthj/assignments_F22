@@ -50,7 +50,7 @@ def orb_matched_points(opts):
     template_img = cv2.imread('../data/hp_cover.jpg')
 
     x,y,z = query_img.shape
-    template_img = cv2.resize(template_img, (y,x))
+    template_img = cv2.resize(template_img, (y,x), interpolation=cv2.INTER_CUBIC)
     
     # Convert it to grayscale
     query_img_bw = cv2.cvtColor(query_img,cv2.COLOR_BGR2GRAY)

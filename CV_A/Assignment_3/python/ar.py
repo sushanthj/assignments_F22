@@ -14,11 +14,6 @@ from matchPics import matchPics
 from itertools import repeat
 from helper import loadVid
 
-# find where book is in frame 1
-BOOK_LOC = (134, 84, 414, 424)
-# calculate size of book in pixels
-BOOK_SHAPE = (280, 340)
-
 def extract_frames(path):
     frames = loadVid(path)
     return frames
@@ -86,7 +81,7 @@ def warp_frames_and_composite(ar_frames, book_frames, homography_ref, out_dir):
                     ))
     end_time = time.time()
     print("***************************************")
-    print("fps of video processing is", round((end_time-start_time)/len(ar_frames), 2))
+    print("fps of video processing is", round((len(ar_frames)/(end_time-start_time)), 2))
     print("***************************************")
 
     compiled_video = compile_video(out_dir)
@@ -145,6 +140,34 @@ def ar_each_frame(ar_frame, book_frame, i, pack):
     save_path = os.path.join(out_dir, 'frame' + '_' + str(i) + '.jpeg')
     cv2.imwrite(save_path, composite_img)
 
+def ar_each_frame_fast(ar_frame, book_frame, i, pack):
+    opts = pack[0]
+    homography_ref = pack[1]
+
+    # Convert it to grayscale
+    query_img_bw = cv2.cvtColor(homography_ref,cv2.COLOR_BGR2GRAY)
+    train_img_bw = cv2.cvtColor(book_frame, cv2.COLOR_BGR2GRAY)
+    
+    # Initialize the ORB detector algorithm
+    orb = cv2.ORB_create()
+
+    queryKeypoints, queryDescriptors = orb.detectAndCompute(query_img_bw,None)
+    trainKeypoints, trainDescriptors = orb.detectAndCompute(train_img_bw,None)
+    
+    matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = matcher.match(queryDescriptors,trainDescriptors)
+    list_kp1 = [queryKeypoints[mat.queryIdx].pt for mat in matches] 
+    list_kp2 = [trainKeypoints[mat.trainIdx].pt for mat in matches]
+
+    locs1 = np.stack(list_kp1, axis=0)
+    locs2 = np.stack(list_kp2, axis=0)
+
+    h, inlier = computeH_ransac(locs1, locs2, opts)
+    
+    composite_img = compositeH(h, ar_frame, book_frame)
+    save_path = os.path.join(out_dir, 'frame' + '_' + str(i) + '.jpeg')
+    cv2.imwrite(save_path, composite_img)
+
 def check_and_create_directory(dir_path, create):
     """
     Checks for existing directories and creates if unavailable
@@ -182,6 +205,10 @@ if __name__ == '__main__':
         book_frames = book_frames[0:len(ar_frames)]
     
     print("total frames to run AR on is", len(book_frames))
+    # find where book is in frame 1
+    BOOK_LOC = (134, 84, 414, 424)
+    # calculate size of book in pixels
+    BOOK_SHAPE = (280, 340)
     
     # downscale the book shape to remove black regions from image
     scale_factor = 0.8

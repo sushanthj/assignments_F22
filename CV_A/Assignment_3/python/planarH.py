@@ -156,7 +156,7 @@ def computeH_ransac(locs1, locs2, opts):
 
     #? Create a boolean vector of length N where 1 = inlier and 0 = outlier
     print("Computing RANSAC")
-    for i in tqdm(range(max_iters)):
+    for i in range(max_iters):
         test_locs1 = deepcopy(locs1)
         test_locs2 = deepcopy(locs2)
         # chose a random sample of 4 points to find H
