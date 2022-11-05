@@ -15,7 +15,7 @@ def rotTest(opts):
     I1_orig = cv2.imread('../data/cv_cover.jpg')
     range_obj_1 = range(36)
     range_obj_2 = range(1,9,3)
-    compute_histogram_and_display(I1_orig, range_obj_1, display=False)
+    compute_histogram_and_display(I1_orig, range_obj_2, display=False)
     # compute_histogram_and_display(I1_orig, range_obj_2, display=True)
 
 
