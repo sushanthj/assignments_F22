@@ -100,7 +100,7 @@ def position_controller(current_state,desired_state,params,question, time_step):
     thrust = params["mass"]*(R_be @ (gravity_vec + des_acc + err_xyz))
     print("thrust was", thrust)
 
-    return thrust, [des_acc + err_xyz]
+    return thrust, des_acc + err_xyz
 
 
 def attitude_by_flatness(desired_state,params):
@@ -124,7 +124,42 @@ def attitude_by_flatness(desired_state,params):
     
     '''
 
-    # TO DO:
+    phi_des, thetha_des = 0,0
+    psi_des = desired_state["rot"][2]
+    g = params["gravity"]
+
+    ############### Calculate "rot"
+    # phi_thetha_des = np.array(([0],[0]))
+    des_acc = desired_state["acc"]
+
+    phi_thetha_des = 1/g*((np.array(([np.sin(psi_des), -np.cos(psi_des)],
+                                    [np.cos(psi_des), np.sin(psi_des)]))) @ des_acc[0:2,:])
+    phi_thetha_psi_des = np.vstack((phi_thetha_des, psi_des))
+
+    print("phi_theta_psi_des is \n", phi_thetha_psi_des)
+    ################
+
+    ################ Calculate "omega"
+    psi_dot_des = desired_state["omega"][2]
+
+    # phi_dot_thetha_dot_des = np.array(([0],[0]))
+    des_acc_2 = des_acc * psi_dot_des
+
+    # ignoring the jerk terms since trajectory is not differentiable
+    phi_dot_thetha_dot_des = 1/g*((np.array(([np.cos(psi_des), np.sin(psi_des)],
+                                    [-np.sin(psi_des), np.cos(psi_des)]))) @ des_acc_2[0:2,:])
+    phi_dot_thetha_dot_psi_dot_des = np.vstack((phi_dot_thetha_dot_des, psi_dot_des))
+
+    print("phi_dot_thetha_dot_psi_dot_des is \n", phi_dot_thetha_dot_psi_dot_des)
+    #################
+    
+    return [phi_thetha_psi_des[0,0], 
+            phi_thetha_psi_des[1,0], 
+            phi_thetha_psi_des[2,0]], \
+            [phi_dot_thetha_dot_psi_dot_des[0,0],
+             phi_dot_thetha_dot_psi_dot_des[1,0],
+             phi_dot_thetha_dot_psi_dot_des[2,0]]
+
 
 def attitude_controller(params, current_state,desired_state,question):
     '''
@@ -163,6 +198,33 @@ def attitude_controller(params, current_state,desired_state,question):
     Kdpsi = 17.88
 
     # TO DO:
+    Kp_mat = np.diag((Kpphi, Kptheta, Kppsi))
+    Kd_mat = np.diag((Kdphi, Kdtheta, Kdpsi))
+
+    phi, thetha, psi = current_state["rot"]
+    phi_des, thetha_des, psi_des = desired_state["rot"]
+
+    phi_dot, thetha_dot, psi_dot = current_state["omega"]
+    phi_dot_des, thetha_dot_des, psi_dot_des = desired_state["omega"]
+
+    if int(question) == 2:
+        zeroth_order_error = np.array((
+                                       [phi - phi_des],
+                                       [thetha - thetha_des],
+                                       [psi - psi_des]))
+        first_order_error = np.array((
+                                      [phi_dot - phi_dot_des], 
+                                      [thetha_dot - thetha_dot_des], 
+                                      [psi_dot - psi_dot_des]
+                                    ))
+
+        torques = params["inertia"] @ (
+                                        (-Kp_mat @ (zeroth_order_error)) - 
+                                        (Kd_mat @ first_order_error)
+                                       )
+        
+        print("torques is", torques)
+        return torques
 
 
 
@@ -275,18 +337,18 @@ def main(question):
         # convert current state to stuct for control functions
         current_state = {"pos":state_list[0:3],"vel":state_list[3:6],"rot":state_list[6:9], \
             "omega":state_list[9:12],"rpm":state_list[12:16]}
-        print("current state is \n", current_state)
+        # print("current state is \n", current_state)
         
         # Get desired state from matrix, put into struct for control functions
         desired_state = {"pos":trajectory_matrix[0:3,i],"vel":trajectory_matrix[3:6,i],\
             "rot":trajectory_matrix[6:9,i],"omega":trajectory_matrix[9:12,i],"acc":trajectory_matrix[12:15,i]}
-        print("desired state is \n", desired_state)
+        # print("desired state is \n", desired_state)
         
         # Get desired acceleration from position controller
         [F, desired_state["acc"]] = position_controller(current_state,desired_state,params,question, time_step)
         
         # Computes desired pitch and roll angles
-        [desired_state["rot"],desired_state["omega"]] = attitude_by_flatness(desired_state,params)        
+        desired_state["rot"], desired_state["omega"] = attitude_by_flatness(desired_state,params)        
         
         # Get torques from attitude controller
         M = attitude_controller(params,current_state,desired_state,question)
