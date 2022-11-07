@@ -72,7 +72,7 @@ def warp_frames_and_composite(ar_frames, book_frames, homography_ref, out_dir):
     start_time = time.time()
     with pool as p:
         p.starmap(
-                ar_each_frame, 
+                ar_each_frame_fast, 
                 zip(
                     ar_frames, 
                     book_frames,
@@ -147,6 +147,9 @@ def ar_each_frame_fast(ar_frame, book_frame, i, pack):
     # Convert it to grayscale
     query_img_bw = cv2.cvtColor(homography_ref,cv2.COLOR_BGR2GRAY)
     train_img_bw = cv2.cvtColor(book_frame, cv2.COLOR_BGR2GRAY)
+
+    query_img_bw = cv2.GaussianBlur(query_img_bw, (3,3),0)
+    train_img_bw = cv2.GaussianBlur(train_img_bw, (3,3),0)
     
     # Initialize the ORB detector algorithm
     orb = cv2.ORB_create()
@@ -207,8 +210,9 @@ if __name__ == '__main__':
     print("total frames to run AR on is", len(book_frames))
     # find where book is in frame 1
     BOOK_LOC = (134, 84, 414, 424)
-    # calculate size of book in pixels
+    # # calculate size of book in pixels
     BOOK_SHAPE = (280, 340)
+    # BOOK_SHAPE = (homography_ref.shape[1], homography_ref.shape[0])
     
     # downscale the book shape to remove black regions from image
     scale_factor = 0.8
@@ -225,7 +229,8 @@ if __name__ == '__main__':
     print("crops locs ar are ", crop_locs_ar)
 
     # resize homography_ref book to same size as AR crop
-    homography_ref = cv2.resize(homography_ref, BOOK_SHAPE)
+    homography_ref = cv2.resize(homography_ref, BOOK_SHAPE, interpolation=cv2.INTER_CUBIC)
+    # homography_ref = book_frames[0][BOOK_LOC[1]:BOOK_LOC[3], BOOK_LOC[0]:BOOK_LOC[2]]
 
     # crop ar_frames to act as our harry_potter template image
     ar_frames = crop_frames_and_resize(ar_frames, crop_locs_ar, scale_factor)

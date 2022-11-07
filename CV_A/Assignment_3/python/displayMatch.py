@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import time
 from matchPics import matchPics
 from scipy import ndimage
 from helper import plotMatches
@@ -15,7 +16,11 @@ def displayMatched(opts, image1, image2):
     opts: Command line args
     image1, image2: Source images
     """
+
+    start = time.time()
     matches, locs1, locs2 = matchPics(image1, image2, opts)
+    end = time.time()
+    print("processing time is", round((end-start), 2))
 
     # display matched features
     plotMatches(image1, image2, matches, locs1, locs2)
