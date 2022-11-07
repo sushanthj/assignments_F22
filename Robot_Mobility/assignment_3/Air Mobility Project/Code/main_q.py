@@ -60,7 +60,7 @@ def position_controller(current_state,desired_state,params,question, time_step):
     x_dot_des, y_dot_des, z_dot_des = desired_state["vel"]
     phi_des, thetha_des, psi_des = desired_state["rot"]
     phi_dot_des, thetha_dot_des, psi_dot_des = desired_state["omega"]
-    xdotdot, ydotdot, zdotdot = 0,0,0
+    x_dot_dot, y_dot_dot, z_dot_dot = desired_state["acc"]
 
     # Example PD gains
     # gains for x,y,z respectively
@@ -77,8 +77,30 @@ def position_controller(current_state,desired_state,params,question, time_step):
     Kp = np.diag((Kp1, Kp2, Kp3))
     Kd = np.diag((Kd1, Kd2, Kd3))
 
-    err_xyz = (-Kp @ np.array([[x-x_des],[y-y_des],[z-z_des]])) \
-                - (Kd @ np.array([[x_dot-x_dot_des],[y_dot-y_dot_des],[z_dot-z_dot_des]])))
+    err_xyz = (-Kp @ np.array(([[x-x_des],[y-y_des],[z-z_des]]))) \
+            - (Kd @ np.array(([[x_dot-x_dot_des],[y_dot-y_dot_des],[z_dot-z_dot_des]])))
+    
+    des_acc = np.array(([x_dot_dot],[y_dot_dot],[z_dot_dot]))
+
+    print("desired accels are \n", des_acc)
+    print("error in xyz accels are \n", err_xyz)
+
+
+    # find the rotation matrix to map thrust to body frame
+    # Rx(phi), Ry(thetha), Rz(psi)
+    Rx = np.array(([1,0,0],[0, np.cos(phi), -np.sin(phi)],[0, np.sin(phi), np.cos(phi)]))
+    Ry = np.array(([np.cos(thetha), 0, np.sin(thetha)], [0,1,0], [-np.sin(thetha), 0, np.cos(thetha)]))
+    Rz = np.array(([np.cos(phi), -np.sin(phi), 0],[np.sin(phi), np.cos(phi), 0], [0,0,1]))
+
+    R_eb = Rz @ (Ry @ Rx)
+    R_be = R_eb.T
+
+    gravity_vec = np.array(([0],[0],[params["gravity"]]))
+    
+    thrust = params["mass"]*(R_be @ (gravity_vec + des_acc + err_xyz))
+    print("thrust was", thrust)
+
+    return thrust, [des_acc + err_xyz]
 
 
 def attitude_by_flatness(desired_state,params):
