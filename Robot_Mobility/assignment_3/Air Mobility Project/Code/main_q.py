@@ -71,8 +71,8 @@ def position_controller(current_state,desired_state,params,question, time_step):
     Kp2 = 17
     Kd2 = 6.6
 
-    Kp3 = 20
-    Kd3 = 9
+    Kp3 = 21
+    Kd3 = 1.3
 
     # TO DO:
     Kp = np.diag((Kp1, Kp2, Kp3))
@@ -208,7 +208,7 @@ def attitude_controller(params, current_state,desired_state,question):
     phi_dot, thetha_dot, psi_dot = current_state["omega"]
     phi_dot_des, thetha_dot_des, psi_dot_des = desired_state["omega"]
 
-    if int(question) == 2:
+    if int(question) == 2 or int(question) == 3:
         zeroth_order_error = np.array((
                                        [phi - phi_des],
                                        [thetha - thetha_des],
@@ -286,7 +286,7 @@ def motor_model(F,M,current_state,params):
     # limit the desired rpm
     for i in range(desired_rpm.shape[0]):
         if desired_rpm[i,0] > 20000:
-            fixed_desired_rpm[i,0]
+            fixed_desired_rpm[i,0] = 20000
         else:
             pass
 
@@ -342,14 +342,14 @@ def main(question):
             "rpm_max": 20000, "inertia": np.diag([0.0033,0.0033,0.005]), "COM_vertical_offset": 0.05}
     
     # Get the waypoints for this specific question
-    [waypoints, waypoint_times] = lookup_waypoints(question)
+    [waypoints, waypoint_times, const_acc] = lookup_waypoints(question)
     # waypoints are of the form [x, y, z, yaw]
     # waypoint_times are the seconds you should be at each respective waypoint
     # make sure the simulation parameters below allow you to get to all points
 
     # Set the simualation parameters
     time_initial = 0
-    time_final = 10
+    time_final = 20
     time_step = 0.005 # in secs
     # 0.005 sec is a reasonable time step for this system
     
@@ -361,6 +361,7 @@ def main(question):
     state = np.zeros((16,1))
     # state: [x,y,z,xdot,ydot,zdot,phi,theta,psi,phidot,thetadot,psidot,rpm]
 
+    print(waypoints.shape)
     # Populate the state vector with the first waypoint 
     # (assumes robot is at first waypoint at the initial time)
     state[0] = waypoints[0,0]
@@ -370,7 +371,7 @@ def main(question):
 
     #Create a trajectory consisting of desired state at each time step
     # Some aspects of this state we can plan in advance, some will be filled during the loop
-    trajectory_matrix = trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_step)
+    trajectory_matrix = trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_step, const_acc)
     # [x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
 
     # Create a matrix to hold the actual state at each time step
@@ -395,7 +396,7 @@ def main(question):
 
     # Loop through the timesteps and update quadrotor
     for i in range(max_iteration-1):
-        
+        # break
         # convert current state to stuct for control functions
         current_state = {"pos":state_list[0:3],"vel":state_list[3:6],"rot":state_list[6:9], \
             "omega":state_list[9:12],"rpm":state_list[12:16]}

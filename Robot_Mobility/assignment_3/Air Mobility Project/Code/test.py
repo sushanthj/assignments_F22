@@ -1,8 +1,5 @@
 import numpy as np
 
-a = np.arange(3).reshape((3,1))
-
-x,y,z = a
+a = np.zeros(3)
 
 print(a)
-print(x,y,z)
