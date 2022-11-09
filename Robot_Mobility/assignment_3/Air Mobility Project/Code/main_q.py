@@ -14,6 +14,7 @@ from locale import currency
 
 from scipy.integrate import solve_ivp
 from mpl_toolkits.mplot3d import Axes3D
+from copy import deepcopy
 
 from utils import plot_state_error, plot_position_3d
 from waypoints_traj import lookup_waypoints, trajectory_planner
@@ -93,14 +94,14 @@ def position_controller(current_state,desired_state,params,question, time_step):
     Rz = np.array(([np.cos(phi), -np.sin(phi), 0],[np.sin(phi), np.cos(phi), 0], [0,0,1]))
 
     R_eb = Rz @ (Ry @ Rx)
-    R_be = R_eb.T
+    # R_be = R_eb.T
 
     gravity_vec = np.array(([0],[0],[params["gravity"]]))
     
-    thrust = params["mass"]*(R_be @ (gravity_vec + des_acc + err_xyz))
-    print("thrust was", thrust[2,0])
+    thrust = params["mass"]*(np.array(([0,0,1])) @ (gravity_vec + des_acc + err_xyz))
+    print("thrust was", thrust[0])
 
-    return thrust[2,0], des_acc + err_xyz
+    return thrust, des_acc + err_xyz, R_eb
 
 
 def attitude_by_flatness(desired_state,params):
@@ -274,20 +275,31 @@ def motor_model(F,M,current_state,params):
 
     T_motor_act = act_force_moment[1:4,0]
     F_motor_act = act_force_moment[0,0]
+    print("T actual is", T_motor_act)
 
     #? Find desired rpm
     force_torq_mat = np.vstack((np.expand_dims(F, axis=0), M))
     desired_rpm = np.sqrt(mix_inv @ force_torq_mat)
-    print("desired rpm is", desired_rpm)
+
+    fixed_desired_rpm = deepcopy(desired_rpm)
+
+    # limit the desired rpm
+    for i in range(desired_rpm.shape[0]):
+        if desired_rpm[i,0] > 20000:
+            fixed_desired_rpm[i,0]
+        else:
+            pass
+
+    print("desired rpm is", fixed_desired_rpm)
     
     #? Find rpm_dot
-    w_dot = k_m * (desired_rpm - curr_rpm)
+    w_dot = k_m * (fixed_desired_rpm - curr_rpm)
     print("w dot is", w_dot)
 
     return F_motor_act, T_motor_act, w_dot
 
 
-def dynamics(t,state,params,F_actual,M_actual,rpm_motor_dot):
+def dynamics(t,state,params,F_actual,M_actual,rpm_motor_dot, rot_matrix):
 
     '''
     Input parameters:
@@ -307,7 +319,19 @@ def dynamics(t,state,params,F_actual,M_actual,rpm_motor_dot):
     state_dot: change in state
     '''
     # TO DO:
-    
+    x,y,z,xdot,ydot,zdot,phi,theta,psi,phidot,thetadot,psidot,rpm1, rpm2, rpm3, rpm4 = state
+
+    F_eb = (rot_matrix @ np.array(([[0],[0],[F_actual]]))) - (params["mass"] * np.array(([[0],[0],[params["gravity"]]])))
+    # find translational accelerations
+    xddot, yddot, zddot = (F_eb / params["mass"])[0,0], (F_eb / params["mass"])[1,0], (F_eb / params["mass"])[2,0]
+
+    # find rotational accelerations
+    rot_acc = np.linalg.inv(params["inertia"]) @ M_actual
+    phiddot, thetaddot, psiddot = rot_acc[0], rot_acc[1], rot_acc[2]
+
+    state_dot = [xdot, ydot, zdot, xddot, yddot, zddot, phidot, thetadot, psidot, phiddot, thetaddot, psiddot, rpm_motor_dot[0,0], rpm_motor_dot[1,0], rpm_motor_dot[2,0], rpm_motor_dot[3,0]]
+    return state_dot
+
 
 
 def main(question):
@@ -383,7 +407,8 @@ def main(question):
         # print("desired state is \n", desired_state)
         
         # Get desired acceleration from position controller
-        [F, desired_state["acc"]] = position_controller(current_state,desired_state,params,question, time_step)
+        [F, desired_state["acc"], rot_matrix] = position_controller(current_state,desired_state,params,question, time_step)
+        print("")
         
         # Computes desired pitch and roll angles
         desired_state["rot"], desired_state["omega"] = attitude_by_flatness(desired_state,params)        
@@ -397,7 +422,11 @@ def main(question):
         # Get the change in state from the quadrotor dynamics
         time_int = tuple((time_vec[i],time_vec[i+1]))
         
-        sol = solve_ivp(dynamics,time_int,state_list,args=(params,F_actual,M_actual,rpm_motor_dot),t_eval=np.linspace(time_vec[i],time_vec[i+1],(int(time_step/0.00005))))
+        # print("intial state list is", state_list)
+        # updated_state = dynamics(time_int, state_list, params, F_actual, M_actual, rpm_motor_dot, rot_matrix)
+        # print("updated step is", updated_step)
+
+        sol = solve_ivp(dynamics,time_int,state_list,args=(params,F_actual,M_actual,rpm_motor_dot, rot_matrix),t_eval=np.linspace(time_vec[i],time_vec[i+1],(int(time_step/0.00005))))
         
         state_list = sol.y[:,-1]
         acc = (sol.y[3:6,-1]-sol.y[3:6,-2])/(sol.t[-1]-sol.t[-2])
@@ -405,8 +434,9 @@ def main(question):
         # Update desired state matrix
         actual_desired_state_matrix[0:3,i+1] = desired_state["pos"]
         actual_desired_state_matrix[3:6,i+1] = desired_state["vel"]
-        actual_desired_state_matrix[6:9,i+1] = desired_state["rot"][:,0]
-        actual_desired_state_matrix[9:12,i+1] = desired_state["omega"][:,0]
+        print("rot is", desired_state["omega"])
+        actual_desired_state_matrix[6:9,i+1] = desired_state["rot"][:]
+        actual_desired_state_matrix[9:12,i+1] = desired_state["omega"][:]
         actual_desired_state_matrix[12:15,i+1] = desired_state["acc"][:,0]
 
         # Update actual state matrix
