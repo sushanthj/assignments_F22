@@ -163,8 +163,40 @@ def plot_position_3d(state, state_des):
     ax.set_title('Position')
     ax.legend()
 
-    ax.axes.set_xlim3d(left=-.5, right=.5)
-    ax.axes.set_ylim3d(bottom=-.5, top=.5)
-    ax.axes.set_zlim3d(bottom=0, top=.5)
+    ax.axes.set_xlim3d(left=-.5, right=2)
+    ax.axes.set_ylim3d(bottom=-.5, top=2)
+    ax.axes.set_zlim3d(bottom=0, top=2)
 
     plt.show()
+
+
+def plot_des_vs_track(state, state_des, time_vec):
+        x, y, z = state[0:3]
+        phi, theta, psi = state[6:9]
+        x_des, y_des, z_des = state_des[0:3]
+        phi_des, theta_des, psi_des = state_des[6:9]
+        z_acc = state[-1]
+        z_acc_des = state_des[-1]
+        
+        fig = plt.figure(4)
+        
+        x_track = fig.add_subplot(331)
+        x_track.plot(time_vec, x, 'r')
+        x_track.plot(time_vec, x_des, 'b')
+        x_track.set(xlabel = 'time')
+        x_track.set(ylabel = 'x (m)')
+
+        z_track = fig.add_subplot(332)
+        z_track.plot(time_vec, z, 'r')
+        z_track.plot(time_vec, z_des, 'b')
+        z_track.set(xlabel = 'time')
+        z_track.set(ylabel = 'z (m)')
+
+        acc_track = fig.add_subplot(333)
+        acc_track.plot(time_vec, z_acc, 'r')
+        acc_track.plot(time_vec, z_acc_des, 'b')
+        acc_track.set(xlabel = 'time')
+        acc_track.set(ylabel = 'z_ddot (m)')
+
+        plt.suptitle('Desired vs Actual Pose')
+        plt.show()

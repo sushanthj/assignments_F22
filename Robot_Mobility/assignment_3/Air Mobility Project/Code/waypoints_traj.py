@@ -118,5 +118,4 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
             
             trajectory_state[5,i] = z_vel
 
-    print("final waypoint number is", current_waypoint_number)
     return (trajectory_state)

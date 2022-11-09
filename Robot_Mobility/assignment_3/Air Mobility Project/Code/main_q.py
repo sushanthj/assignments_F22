@@ -16,7 +16,7 @@ from scipy.integrate import solve_ivp
 from mpl_toolkits.mplot3d import Axes3D
 from copy import deepcopy
 
-from utils import plot_state_error, plot_position_3d
+from utils import plot_state_error, plot_position_3d, plot_des_vs_track
 from waypoints_traj import lookup_waypoints, trajectory_planner
 
 def position_controller(current_state,desired_state,params,question, time_step):
@@ -71,8 +71,8 @@ def position_controller(current_state,desired_state,params,question, time_step):
     Kp2 = 17
     Kd2 = 6.6
 
-    Kp3 = 21
-    Kd3 = 1.3
+    Kp3 = 20
+    Kd3 = 9
 
     # TO DO:
     Kp = np.diag((Kp1, Kp2, Kp3))
@@ -125,8 +125,7 @@ def attitude_by_flatness(desired_state,params):
     
     '''
 
-    phi_des, thetha_des = 0,0
-    psi_des = desired_state["rot"][2]
+    phi_des, thetha_des, psi_des = desired_state["rot"]
     g = params["gravity"]
 
     ############### Calculate "rot"
@@ -422,17 +421,13 @@ def main(question):
         
         # Get the change in state from the quadrotor dynamics
         time_int = tuple((time_vec[i],time_vec[i+1]))
-        
-        # print("intial state list is", state_list)
-        # updated_state = dynamics(time_int, state_list, params, F_actual, M_actual, rpm_motor_dot, rot_matrix)
-        # print("updated step is", updated_step)
 
         sol = solve_ivp(dynamics,time_int,state_list,args=(params,F_actual,M_actual,rpm_motor_dot, rot_matrix),t_eval=np.linspace(time_vec[i],time_vec[i+1],(int(time_step/0.00005))))
         
         state_list = sol.y[:,-1]
         acc = (sol.y[3:6,-1]-sol.y[3:6,-2])/(sol.t[-1]-sol.t[-2])
         
-        # Update desired state matrix
+        # Update desired state matrix (15 x N numpy array)
         actual_desired_state_matrix[0:3,i+1] = desired_state["pos"]
         actual_desired_state_matrix[3:6,i+1] = desired_state["vel"]
         print("rot is", desired_state["omega"])
@@ -440,15 +435,18 @@ def main(question):
         actual_desired_state_matrix[9:12,i+1] = desired_state["omega"][:]
         actual_desired_state_matrix[12:15,i+1] = desired_state["acc"][:,0]
 
-        # Update actual state matrix
+        # Update actual state matrix (16 x N numpy array)
         actual_state_matrix[0:12,i+1] = state_list[0:12]
         actual_state_matrix[12:15,i+1] = acc
-        
+    
     # plot for values and errors
-    plot_state_error(actual_state_matrix,actual_desired_state_matrix,time_vec)
+    # plot_state_error(actual_state_matrix,actual_desired_state_matrix,time_vec)
 
     # plot for 3d visualization
-    plot_position_3d(actual_state_matrix,actual_desired_state_matrix)
+    # plot_position_3d(actual_state_matrix,actual_desired_state_matrix)
+
+    # plot desired pose vs actual pose
+    plot_des_vs_track(actual_state_matrix, actual_desired_state_matrix, time_vec)
         
         
 if __name__ == '__main__':
