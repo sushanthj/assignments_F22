@@ -33,7 +33,7 @@ def lookup_waypoints(question):
 
         waypoints = np.array([np.zeros(shape=z_vals.shape), np.zeros(shape=z_vals.shape), z_vals, np.zeros(shape=z_vals.shape)])
         waypoint_times = np.arange(start=0, stop=20, step=0.1)
-        const_acc = 1
+        const_acc = 0.02 # m/s2
         return([waypoints, waypoint_times, const_acc])
 
 def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_step, const_acc):
@@ -92,29 +92,16 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
             # use const_acc from lookup_waypoints
 
             # const positive accel upwards
-            if current_waypoint_number < int((len(waypoint_times)-1)/4):
+            if current_waypoint_number < int((len(waypoint_times)-1)/2):
                 # v = u + at
                 z_vel = z_vel + const_acc*time_step
-            elif current_waypoint_number == int((len(waypoint_times)-1)/4):
-                # v = u + 0t
+            elif current_waypoint_number == int((len(waypoint_times)-1)/2):
+                # v = u + 0t (u = 0)
                 z_vel = z_vel
-            elif (current_waypoint_number > int((len(waypoint_times)-1)/4)) and \
-                    (current_waypoint_number < int((len(waypoint_times)-1)/2)):
-                # v = u -at
-                z_vel = z_vel -const_acc*time_step
-            elif current_waypoint_number == int(len(waypoint_times)-1)/2:
-                # v = u + 0t
-                z_vel = z_vel
-            elif (current_waypoint_number > int((len(waypoint_times)-1)/2)) and \
-                    (current_waypoint_number < int((len(waypoint_times)-1)*0.75)):
-                # v = u + at
-                z_vel = z_vel + const_acc*time_step
-            elif (current_waypoint_number == int((len(waypoint_times)-1)*0.75)):
-                # v = u + 0t
-                z_vel = z_vel
-            elif (current_waypoint_number > int((len(waypoint_times)-1)*0.75)):
-                # v = u -at
-                z_vel = z_vel -const_acc*time_step
+            elif current_waypoint_number > int((len(waypoint_times)-1)/2):
+                # v = u - at
+                z_vel = z_vel - const_acc*time_step
+            
             
             trajectory_state[5,i] = z_vel
 

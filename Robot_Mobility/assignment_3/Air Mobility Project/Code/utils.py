@@ -177,6 +177,8 @@ def plot_des_vs_track(state, state_des, time_vec):
         phi_des, theta_des, psi_des = state_des[6:9]
         z_acc = state[-1]
         z_acc_des = state_des[-1]
+        z_vel = state[5]
+        z_vel_des = state_des[5]
         
         fig = plt.figure(4)
         
@@ -196,7 +198,13 @@ def plot_des_vs_track(state, state_des, time_vec):
         acc_track.plot(time_vec, z_acc, 'r')
         acc_track.plot(time_vec, z_acc_des, 'b')
         acc_track.set(xlabel = 'time')
-        acc_track.set(ylabel = 'z_ddot (m)')
+        acc_track.set(ylabel = 'z_acc (m)')
+
+        vel_track = fig.add_subplot(334)
+        vel_track.plot(time_vec, z_vel, 'r')
+        vel_track.plot(time_vec, z_vel_des, 'b')
+        vel_track.set(xlabel = 'time')
+        vel_track.set(ylabel = 'z_vel (m)')
 
         plt.suptitle('Desired vs Actual Pose')
         plt.show()
