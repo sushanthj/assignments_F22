@@ -348,7 +348,7 @@ def main(question):
 
     # Set the simualation parameters
     time_initial = 0
-    time_final = 20
+    time_final = 20.1
     time_step = 0.005 # in secs
     # 0.005 sec is a reasonable time step for this system
     

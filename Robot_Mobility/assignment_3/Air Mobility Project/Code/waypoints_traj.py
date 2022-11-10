@@ -99,7 +99,7 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
                 z_dist = z_dist + z_vel*time_step
                 trajectory_state[-1,i] = const_acc
             elif current_waypoint_number == 100: #int((len(waypoint_times)-1)/2):
-                z_vel = z_vel
+                z_vel = 0
                 # d = s*t
                 z_dist = z_dist
                 trajectory_state[-1,i] = 0
@@ -107,7 +107,7 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
                 # v = u + a*t
                 z_vel = z_vel - const_acc*time_step
                 # d = s*t
-                z_dist = z_dist - z_vel*time_step
+                z_dist = z_dist + z_vel*time_step
                 trajectory_state[-1,i] = -const_acc
             else:
                 z_vel = 0
