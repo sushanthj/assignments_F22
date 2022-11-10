@@ -71,8 +71,8 @@ def position_controller(current_state,desired_state,params,question, time_step):
     Kp2 = 17
     Kd2 = 6.6
 
-    Kp3 = 20
-    Kd3 = 9
+    Kp3 = 22
+    Kd3 = 10
 
     # TO DO:
     Kp = np.diag((Kp1, Kp2, Kp3))
