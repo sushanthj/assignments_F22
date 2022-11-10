@@ -91,7 +91,7 @@ def position_controller(current_state,desired_state,params,question, time_step):
     # Rx(phi), Ry(thetha), Rz(psi)
     Rx = np.array(([1,0,0],[0, np.cos(phi), -np.sin(phi)],[0, np.sin(phi), np.cos(phi)]))
     Ry = np.array(([np.cos(thetha), 0, np.sin(thetha)], [0,1,0], [-np.sin(thetha), 0, np.cos(thetha)]))
-    Rz = np.array(([np.cos(phi), -np.sin(phi), 0],[np.sin(phi), np.cos(phi), 0], [0,0,1]))
+    Rz = np.array(([np.cos(psi), -np.sin(psi), 0],[np.sin(psi), np.cos(psi), 0], [0,0,1]))
 
     R_eb = Rz @ (Ry @ Rx)
     # R_be = R_eb.T
