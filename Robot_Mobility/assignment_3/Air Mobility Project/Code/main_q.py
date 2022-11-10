@@ -92,7 +92,7 @@ def position_controller(current_state,desired_state,params,question, time_step):
     # Rx(phi), Ry(thetha), Rz(psi)
     Rx = np.array(([1,0,0],[0, np.cos(phi), -np.sin(phi)],[0, np.sin(phi), np.cos(phi)]))
     Ry = np.array(([np.cos(thetha), 0, np.sin(thetha)], [0,1,0], [-np.sin(thetha), 0, np.cos(thetha)]))
-    Rz = np.array(([np.cos(phi), -np.sin(phi), 0],[np.sin(phi), np.cos(phi), 0], [0,0,1]))
+    Rz = np.array(([np.cos(psi), -np.sin(psi), 0],[np.sin(psi), np.cos(psi), 0], [0,0,1]))
 
     R_eb = Rz @ (Ry @ Rx)
     # R_be = R_eb.T
@@ -334,7 +334,7 @@ def dynamics(t,state,params,F_actual,M_actual,rpm_motor_dot, rot_matrix):
 
 
 
-def main(question):
+def main(question, state_descp):
 
     # Set up quadrotor physical parameters
     params = {"mass": 0.770, "gravity": 9.80665, "arm_length": 0.1103, "motor_spread_angle": 0.925, \
@@ -372,6 +372,10 @@ def main(question):
     # Some aspects of this state we can plan in advance, some will be filled during the loop
     trajectory_matrix = trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_step, const_acc)
     # [x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
+
+    if int(question) == 4:
+        # get trajectory from the state_descriptor class
+        trajectory_matrix = state_descp.traj_generator()
 
     # Create a matrix to hold the actual state at each time step
     actual_state_matrix = np.zeros((15,max_iteration))
@@ -437,23 +441,38 @@ def main(question):
         actual_state_matrix[0:12,i+1] = state_list[0:12]
         actual_state_matrix[12:15,i+1] = acc
     
-    # plot for values and errors
-    plot_state_error(actual_state_matrix,actual_desired_state_matrix,time_vec)
+    if int(question) < 4:
+        # plot for values and errors
+        plot_state_error(actual_state_matrix,actual_desired_state_matrix,time_vec)
 
-    # plot for 3d visualization
-    plot_position_3d(actual_state_matrix,actual_desired_state_matrix)
+        # plot for 3d visualization
+        plot_position_3d(actual_state_matrix,actual_desired_state_matrix)
 
-    # plot desired pose vs actual pose
-    plot_des_vs_track(actual_state_matrix, actual_desired_state_matrix, time_vec)
+        # plot desired pose vs actual pose
+        plot_des_vs_track(actual_state_matrix, actual_desired_state_matrix, time_vec)
+    else:
+        return {"actual_states" : actual_state_matrix, "desired_states" : actual_desired_state_matrix, 
+                "time_ved": time_vec}
 
-def state_machine_creator(question):
+def state_machine(question):
+    """
+    inherit the class which will define boundaries of the states
+    params (list): list of [ start_points[x,y,z,yaw], 
+                                     end_points[x,y,z,yaw], 
+                                     completion_duration, num_steps ]
+    """
 
-    # inherit the class which will handle all mode switching
-    mode_0 = state_descriptor.StateDescriptor(0,0)
-    state_0 = mode_0.final_state
+    mode_0_params = [ [0,0,0,0], [0,0,0,0], 2, 10]
+    mode_0 = state_descriptor.StateDescriptor(0, mode_0_params, 0)
+    # track quad and save the actual vs desired states
+    states_saved = main(question, mode_0)
+    mode_0.state_storage(states_saved)
 
-    mode_1 = state_descriptor.StateDescriptor(1)
-        
+    mode_1_params = [ [0,0,0,0], [0,0,0,1], 2, 100]
+    mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, mode_0.final_time)
+    # track quad and save the actual vs desired states
+    states_saved = main(question, mode_1)
+    mode_0.state_storage(states_saved)
         
 if __name__ == '__main__':
     '''
@@ -466,6 +485,6 @@ if __name__ == '__main__':
     # run the file with command "python3 main.py question_number" in the terminal
     question = sys.argv[1]
     if int(question) < 4:
-        main(question)
+        main(question, 0)
     else:
-        state_machine_creator(question)
+        state_machine(question)
