@@ -8,6 +8,7 @@ import numpy as np
 import sys
 import math
 import matplotlib.pyplot as plt
+import state_descriptor
 
 from distutils.log import error
 from locale import currency
@@ -360,7 +361,6 @@ def main(question):
     state = np.zeros((16,1))
     # state: [x,y,z,xdot,ydot,zdot,phi,theta,psi,phidot,thetadot,psidot,rpm]
 
-    print(waypoints.shape)
     # Populate the state vector with the first waypoint 
     # (assumes robot is at first waypoint at the initial time)
     state[0] = waypoints[0,0]
@@ -382,7 +382,6 @@ def main(question):
     
     # trial outputs
     print("\n waypoints are \n", waypoints)
-    print("\n actual state matrix is \n", actual_state_matrix[:,0])
     
     #Create a matrix to hold the actual desired state at each time step
 
@@ -430,7 +429,6 @@ def main(question):
         # Update desired state matrix (15 x N numpy array)
         actual_desired_state_matrix[0:3,i+1] = desired_state["pos"]
         actual_desired_state_matrix[3:6,i+1] = desired_state["vel"]
-        print("rot is", desired_state["omega"])
         actual_desired_state_matrix[6:9,i+1] = desired_state["rot"][:]
         actual_desired_state_matrix[9:12,i+1] = desired_state["omega"][:]
         actual_desired_state_matrix[12:15,i+1] = desired_state["acc"][:,0]
@@ -447,6 +445,14 @@ def main(question):
 
     # plot desired pose vs actual pose
     plot_des_vs_track(actual_state_matrix, actual_desired_state_matrix, time_vec)
+
+def state_machine_creator(question):
+
+    # inherit the class which will handle all mode switching
+    mode_0 = state_descriptor.StateDescriptor(0,0)
+    state_0 = mode_0.final_state
+
+    mode_1 = state_descriptor.StateDescriptor(1)
         
         
 if __name__ == '__main__':
@@ -459,4 +465,7 @@ if __name__ == '__main__':
     '''
     # run the file with command "python3 main.py question_number" in the terminal
     question = sys.argv[1]
-    main(question)
+    if int(question) < 4:
+        main(question)
+    else:
+        state_machine_creator(question)
