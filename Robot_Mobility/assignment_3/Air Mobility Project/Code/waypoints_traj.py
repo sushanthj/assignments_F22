@@ -29,10 +29,10 @@ def lookup_waypoints(question):
         # space out waypoints to 1cm between each (final dest is 1m)
         z_vals_tkoff = np.arange(start=0, stop=1, step=0.01)
         z_vals_land = np.arange(start=1, stop=0, step=-0.01)
-        z_vals = np.append(z_vals_tkoff, z_vals_land)
+        z_vals = np.append(np.append(z_vals_tkoff, z_vals_land), np.zeros(50))
 
         waypoints = np.array([np.zeros(shape=z_vals.shape), np.zeros(shape=z_vals.shape), z_vals, np.zeros(shape=z_vals.shape)])
-        waypoint_times = np.arange(start=0, stop=20, step=0.1)
+        waypoint_times = np.arange(start=0, stop=25, step=0.1)
         const_acc = 0.02 # m/s2
         return([waypoints, waypoint_times, const_acc])
 
@@ -92,15 +92,17 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
             # use const_acc from lookup_waypoints
 
             # const positive accel upwards
-            if current_waypoint_number < int((len(waypoint_times)-1)/2):
+            if current_waypoint_number < 100: #int((len(waypoint_times)-1)/2):
                 # v = u + at
                 z_vel = z_vel + const_acc*time_step
-            elif current_waypoint_number == int((len(waypoint_times)-1)/2):
-                # v = u + 0t (u = 0)
+            elif current_waypoint_number == 100: #int((len(waypoint_times)-1)/2):
+                # v = u + 0t
                 z_vel = z_vel
-            elif current_waypoint_number > int((len(waypoint_times)-1)/2):
+            elif (current_waypoint_number > 100) and (current_waypoint_number < 201): #int((len(waypoint_times)-1)/2):
                 # v = u - at
                 z_vel = z_vel - const_acc*time_step
+            else:
+                z_vel = 0
             
             
             trajectory_state[5,i] = z_vel

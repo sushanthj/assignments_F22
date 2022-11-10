@@ -71,8 +71,8 @@ def position_controller(current_state,desired_state,params,question, time_step):
     Kp2 = 17
     Kd2 = 6.6
 
-    Kp3 = 22
-    Kd3 = 10
+    Kp3 = 17
+    Kd3 = 3
 
     # TO DO:
     Kp = np.diag((Kp1, Kp2, Kp3))
@@ -440,10 +440,10 @@ def main(question):
         actual_state_matrix[12:15,i+1] = acc
     
     # plot for values and errors
-    # plot_state_error(actual_state_matrix,actual_desired_state_matrix,time_vec)
+    plot_state_error(actual_state_matrix,actual_desired_state_matrix,time_vec)
 
     # plot for 3d visualization
-    # plot_position_3d(actual_state_matrix,actual_desired_state_matrix)
+    plot_position_3d(actual_state_matrix,actual_desired_state_matrix)
 
     # plot desired pose vs actual pose
     plot_des_vs_track(actual_state_matrix, actual_desired_state_matrix, time_vec)
