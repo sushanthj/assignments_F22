@@ -28,10 +28,11 @@ def lookup_waypoints(question):
     elif int(question) == 3:
         # space out waypoints to 1cm between each (final dest is 1m)
         z_vals_tkoff = np.arange(start=0, stop=1, step=0.01)
+        # z_vals_tkoff = np.append(z_vals_tkoff, np.ones(1))
         z_vals_land = np.arange(start=1, stop=0, step=-0.01)
         z_vals = np.append(np.append(z_vals_tkoff, z_vals_land), np.zeros(50))
 
-        waypoints = np.array([np.zeros(shape=z_vals.shape), np.zeros(shape=z_vals.shape), z_vals, np.zeros(shape=z_vals.shape)])
+        waypoints = np.array([np.zeros(shape=z_vals.shape), np.zeros(shape=z_vals.shape), np.zeros(shape=z_vals.shape), np.zeros(shape=z_vals.shape)])
         waypoint_times = np.arange(start=0, stop=25, step=0.1)
         const_acc = 0.02 # m/s2
         return([waypoints, waypoint_times, const_acc])
@@ -76,6 +77,7 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
         trajectory_state = np.zeros((15, max_iteration))
         current_waypoint_number = 0
         z_vel = 0
+        z_dist = 0
 
         # update the curr_waypoint_number depending on simulation iteration time
         for i in range(0,max_iteration):
@@ -83,8 +85,6 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
                 if (i*time_step) >= waypoint_times[current_waypoint_number+1]:
                     current_waypoint_number +=1
 
-            # update the state's x,y,z values
-            trajectory_state[0:3, i] = waypoints[0:3, current_waypoint_number]
             # update the state's yaw value
             trajectory_state[8,i] = waypoints[3, current_waypoint_number]
 
@@ -93,18 +93,28 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
 
             # const positive accel upwards
             if current_waypoint_number < 100: #int((len(waypoint_times)-1)/2):
-                # v = u + at
+                # v = u + a*t
                 z_vel = z_vel + const_acc*time_step
+                # d = s*t
+                z_dist = z_dist + z_vel*time_step
+                trajectory_state[-1,i] = const_acc
             elif current_waypoint_number == 100: #int((len(waypoint_times)-1)/2):
-                # v = u + 0t
                 z_vel = z_vel
-            elif (current_waypoint_number > 100) and (current_waypoint_number < 201): #int((len(waypoint_times)-1)/2):
-                # v = u - at
+                # d = s*t
+                z_dist = z_dist
+                trajectory_state[-1,i] = 0
+            elif (current_waypoint_number > 100) and (current_waypoint_number < 200): #int((len(waypoint_times)-1)/2):
+                # v = u + a*t
                 z_vel = z_vel - const_acc*time_step
+                # d = s*t
+                z_dist = z_dist - z_vel*time_step
+                trajectory_state[-1,i] = -const_acc
             else:
                 z_vel = 0
+                z_dist = 0
+                trajectory_state[-1,i] = 0
             
-            
-            trajectory_state[5,i] = z_vel
+            trajectory_state[2, i] = z_dist
+            trajectory_state[5, i] = z_vel
 
     return (trajectory_state)
