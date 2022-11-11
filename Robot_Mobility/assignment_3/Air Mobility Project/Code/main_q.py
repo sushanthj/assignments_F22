@@ -379,12 +379,12 @@ def main(question, state_descp):
     time_final = 20.1
     finish_time = time_final
     time_step = 0.005 # in secs
-    finish_time_iteration = 0
     # 0.005 sec is a reasonable time step for this system
     
     # vector of timesteps
     time_vec = np.arange(time_initial, time_final, time_step).tolist()
     max_iteration = len(time_vec)
+    finish_time_iteration = max_iteration-1
 
     #? Create the state vector (x,y,z,psi_des for 4 states)
     state = np.zeros((16,1))
@@ -412,6 +412,7 @@ def main(question, state_descp):
     if int(question) == 4:
         print("\n mode number in control loop is", state_descp.mode)
         time_initial, time_final, time_step, time_vec, max_iteration = state_descp.time_params()
+        finish_time_iteration = max_iteration-1
         # get trajectory from the state_descriptor class
         trajectory_matrix = state_descp.traj_generator()
 
@@ -501,7 +502,7 @@ def main(question, state_descp):
             convergence = check_convergence(state_descp, actual_state_matrix[:,i+1])
             if convergence is True:
                 finish_time_iteration = (i+2)
-                finish_time = (i+2)*time_step
+                finish_time = (i+2)*time_step + time_initial
                 actual_state_matrix = actual_state_matrix[:,0:i+2]
                 actual_desired_state_matrix = actual_desired_state_matrix[:,0:i+2]
                 print("breaking iteration was", i+2)
@@ -523,7 +524,7 @@ def main(question, state_descp):
         if convergence is False:
             print("did not converge")
             finish_time_iteration = max_iteration
-            finish_time = (max_iteration)*time_step
+            finish_time = (max_iteration)*time_step + time_initial
             actual_state_matrix = actual_state_matrix
             actual_desired_state_matrix = actual_desired_state_matrix
             print("breaking iteration was", max_iteration)
@@ -548,25 +549,43 @@ def state_machine(question):
 
     mode_0_params = [ [0,0,0,0], [0,0,0,0], 2, 100]
     mode_0 = state_descriptor.StateDescriptor(0, mode_0_params, 0)
-    # track quad and save the actual vs desired states
-    states_saved = main(question, mode_0)
+    # since quad is idle, save states directly
+    states_saved = store_idle_pos(mode_0)
     mode_0.state_storage(states_saved)
+    print("mode0 finish time is", mode_0.final_time)
 
-    mode_1_params = [ [0,0,0,0], [0,0,1,0], 2, 2]
-    mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, 0)
+    mode_1_params = [ [0,0,0,0], [0,0,1,0], 10, 100]
+    mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, mode_0.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_1)
     mode_1.state_storage(states_saved)
+    print("mode1 finish time is", mode_1.final_time)
 
     mode_2_params = [ [0,0,1,0], [0,0,1,0], 5, 100]
     mode_2 = state_descriptor.StateDescriptor(2, mode_2_params, mode_1.final_time)
     # track quad and save the actual vs desired states
-    states_saved = main(question, mode_2)
+    states_saved = store_idle_pos(mode_2)
     mode_2.state_storage(states_saved)
+    print("\nmode2 finish time is", mode_2.final_time)
+
+    mode_3_params = [ [0,0,1,0], [5,0,1,0], 10, 100]
+    mode_3 = state_descriptor.StateDescriptor(3, mode_3_params, mode_2.final_time)
+    # track quad and save the actual vs desired states
+    states_saved = main(question, mode_3)
+    mode_3.state_storage(states_saved)
+    print("\nmode3 finish time is", mode_3.final_time)
+
+    mode_4_params = [ [5,0,1,0], [5,0,0,0], 10, 100]
+    mode_4 = state_descriptor.StateDescriptor(3, mode_4_params, mode_3.final_time)
+    # track quad and save the actual vs desired states
+    states_saved = main(question, mode_4)
+    mode_4.state_storage(states_saved)
+    print("\nmode3 finish time is", mode_4.final_time)
+
+
 
     # calculate the overall time vector across all the states
-    # state_array = [mode_0.final_state, mode_1.final_state, mode_2.final_state]
-    state_array = [mode_1.final_state]
+    state_array = [mode_0.final_state, mode_1.final_state, mode_2.final_state, mode_3.final_state, mode_4.final_state]
     time_vec_overall, actual_overall, desired_overall = calcuate_overall_time_and_pose(state_array)
 
     plot_state_error(actual_overall, desired_overall, time_vec_overall)
@@ -614,18 +633,16 @@ def calcuate_overall_time_and_pose(state_array):
 
     mode_num = 0
 
+    print("combining the individual time vectors")
     for state in state_array:
         # combine the time vectors
         print("\n mode number is", mode_num)
         time_vec = state["time_vec"]
         time_finish_iter = state["finish_time_iter"]
         time_vec_cut = time_vec[:time_finish_iter]
-        print("shape of time vec is", len(time_vec_cut))
         overall_time_vec = overall_time_vec + time_vec_cut
 
         # combine the actual states, combine desired states
-        print("shape of artificial_state val is",overall_actual_state_vec.shape)
-        print("shape of actual val is", state["actual_states"].shape)
         overall_actual_state_vec = np.concatenate((overall_actual_state_vec, state["actual_states"]), axis=1)
         overall_desired_state_vec = np.concatenate((overall_desired_state_vec, state["desired_states"]), axis=1)
         mode_num += 1
@@ -635,11 +652,26 @@ def calcuate_overall_time_and_pose(state_array):
     overall_desired_state_vec = overall_desired_state_vec[:,1:]
     overall_time_vec = overall_time_vec
 
-    print("overall shape of actual_state_ved was", (overall_actual_state_vec.shape))
-    print("overall shape of desired_state_ved was", (overall_desired_state_vec.shape))
-    print("overall time vec is", [round(item, 3) for item in overall_time_vec])
-
     return overall_time_vec, overall_actual_state_vec, overall_desired_state_vec
+
+def store_idle_pos(state_descp):
+    time_initial, time_final, time_step, time_vec, max_iteration = state_descp.time_params()
+    finish_time_iteration = max_iteration
+    finish_time = (max_iteration)*time_step + time_initial
+    actual_state_matrix = state_descp.traj_generator()
+    print("shape of actual state matrix is", actual_state_matrix.shape)
+    actual_desired_state_matrix = deepcopy(actual_state_matrix)
+    saved_state = {
+                "actual_states" : actual_state_matrix, 
+                "desired_states" : actual_desired_state_matrix, 
+                "time_vec": time_vec, 
+                "finish_time_iter": finish_time_iteration, 
+                "finish_time": finish_time,
+                "time_initial": time_initial, 
+                "time_step": time_step
+                  }
+    
+    return saved_state
 
 
 if __name__ == '__main__':

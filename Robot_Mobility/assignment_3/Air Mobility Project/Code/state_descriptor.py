@@ -37,10 +37,10 @@ class StateDescriptor:
             trajectory_state = np.zeros((15, self.max_iteration))
             # height of 15 for: [x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
             current_waypoint_number = 0
-            for i in range(self.start_time, self.max_iteration):
+            for i in range(0, self.max_iteration):
                 # update the curr_waypoint_number depending on simulation iteration time
                 if current_waypoint_number < len(waypoint_times)-1:
-                    if (i*self.time_step) >= waypoint_times[current_waypoint_number+1]:
+                    if (i*self.time_step) >= (waypoint_times[current_waypoint_number+1] - self.start_time):
                         current_waypoint_number +=1
 
                 trajectory_state[0:3, i] = waypoints[0:3, current_waypoint_number]
@@ -54,12 +54,12 @@ class StateDescriptor:
             current_waypoint_number = 0
             z_vel = 0
             z_dist = 0
-            const_acc = 0.08 # m/s^2
+            const_acc = 0.02 # m/s^2
 
             # update the curr_waypoint_number depending on simulation iteration time
-            for i in range(self.start_time, self.max_iteration):
+            for i in range(0, self.max_iteration):
                 if current_waypoint_number < len(waypoint_times)-1:
-                    if (i*self.time_step) >= waypoint_times[current_waypoint_number+1]:
+                    if (i*self.time_step) >= (waypoint_times[current_waypoint_number+1] - self.start_time):
                         current_waypoint_number +=1
 
                 # update the state's yaw value
@@ -87,10 +87,10 @@ class StateDescriptor:
                 trajectory_state = np.zeros((15, self.max_iteration))
                 # height of 15 for: [x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
                 current_waypoint_number = 0
-                for i in range(self.start_time, self.max_iteration):
+                for i in range(0, self.max_iteration):
                     # update the curr_waypoint_number depending on simulation iteration time
                     if current_waypoint_number < len(waypoint_times)-1:
-                        if (i*self.time_step) >= waypoint_times[current_waypoint_number+1]:
+                        if (i*self.time_step) >= (waypoint_times[current_waypoint_number+1] - self.start_time):
                             current_waypoint_number +=1
 
                     trajectory_state[0:3, i] = waypoints[0:3, current_waypoint_number]
@@ -102,6 +102,7 @@ class StateDescriptor:
         self.final_time = self.start_time + self.params[2] # self.params[2] = duration
         self.time_vec = np.arange(self.start_time, self.final_time, self.time_step).tolist()
         self.max_iteration = len(self.time_vec)
+        print("time vec start and stop is ", self.time_vec[0], "  ", self.time_vec[-1])
 
         return self.start_time, self.final_time, self.time_step, self.time_vec, self.max_iteration
         
