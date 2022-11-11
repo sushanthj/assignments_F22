@@ -37,7 +37,7 @@ class StateDescriptor:
             trajectory_state = np.zeros((15, self.max_iteration))
             # height of 15 for: [x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
             current_waypoint_number = 0
-            for i in range(0, self.max_iteration):
+            for i in range(self.start_time, self.max_iteration):
                 # update the curr_waypoint_number depending on simulation iteration time
                 if current_waypoint_number < len(waypoint_times)-1:
                     if (i*self.time_step) >= waypoint_times[current_waypoint_number+1]:
@@ -48,6 +48,7 @@ class StateDescriptor:
             return trajectory_state
             
         elif self.mode == 1:
+            #? FOR VELOCITY PROFILE
             waypoints, waypoint_times = self.generate_waypoints(0)
             trajectory_state = np.zeros((15, self.max_iteration))
             current_waypoint_number = 0
@@ -56,16 +57,13 @@ class StateDescriptor:
             const_acc = 0.08 # m/s^2
 
             # update the curr_waypoint_number depending on simulation iteration time
-            for i in range(0,self.max_iteration):
+            for i in range(self.start_time, self.max_iteration):
                 if current_waypoint_number < len(waypoint_times)-1:
                     if (i*self.time_step) >= waypoint_times[current_waypoint_number+1]:
                         current_waypoint_number +=1
 
                 # update the state's yaw value
                 trajectory_state[8,i] = waypoints[3, current_waypoint_number]
-
-                # we create a velocity profile by fixing a constant acceleration
-                # use const_acc from lookup_waypoints
 
                 # const positive accel upwards
                 if current_waypoint_number < num_steps: #int((len(waypoint_times)-1)/2):
@@ -89,7 +87,7 @@ class StateDescriptor:
                 trajectory_state = np.zeros((15, self.max_iteration))
                 # height of 15 for: [x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
                 current_waypoint_number = 0
-                for i in range(0, self.max_iteration):
+                for i in range(self.start_time, self.max_iteration):
                     # update the curr_waypoint_number depending on simulation iteration time
                     if current_waypoint_number < len(waypoint_times)-1:
                         if (i*self.time_step) >= waypoint_times[current_waypoint_number+1]:
@@ -116,5 +114,5 @@ class StateDescriptor:
         # print("num steps are", num_steps)
         waypoints = np.array([np.zeros(num_steps), np.zeros(num_steps), np.ones(num_steps)*const, np.zeros(num_steps)])
         # print("waypoints from generate waypoints are", waypoints)
-        waypoint_times = np.arange(start=0, stop=duration, step=(duration/num_steps))
+        waypoint_times = np.arange(start=self.start_time, stop=duration, step=(duration/num_steps))
         return([waypoints, waypoint_times])

@@ -10,9 +10,6 @@ import math
 import matplotlib.pyplot as plt
 import state_descriptor
 
-from distutils.log import error
-from locale import currency
-
 from scipy.integrate import solve_ivp
 from mpl_toolkits.mplot3d import Axes3D
 from copy import deepcopy
@@ -72,8 +69,8 @@ def position_controller(current_state,desired_state,params,question, time_step):
     Kp2 = 17
     Kd2 = 6.6
 
-    Kp3 = 17
-    Kd3 = 3
+    Kp3 = 18
+    Kd3 = 3.2
 
     # TO DO:
     Kp = np.diag((Kp1, Kp2, Kp3))
@@ -384,8 +381,6 @@ def main(question, state_descp):
     time_step = 0.005 # in secs
     finish_time_iteration = 0
     # 0.005 sec is a reasonable time step for this system
-
-    print("\n mode number in control loop is", state_descp.mode)
     
     # vector of timesteps
     time_vec = np.arange(time_initial, time_final, time_step).tolist()
@@ -415,6 +410,7 @@ def main(question, state_descp):
     # [x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
 
     if int(question) == 4:
+        print("\n mode number in control loop is", state_descp.mode)
         time_initial, time_final, time_step, time_vec, max_iteration = state_descp.time_params()
         # get trajectory from the state_descriptor class
         trajectory_matrix = state_descp.traj_generator()
@@ -556,8 +552,8 @@ def state_machine(question):
     states_saved = main(question, mode_0)
     mode_0.state_storage(states_saved)
 
-    mode_1_params = [ [0,0,0,0], [0,0,1,0], 2, 100]
-    mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, mode_0.final_time)
+    mode_1_params = [ [0,0,0,0], [0,0,1,0], 2, 2]
+    mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, 0)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_1)
     mode_1.state_storage(states_saved)
@@ -569,7 +565,8 @@ def state_machine(question):
     mode_2.state_storage(states_saved)
 
     # calculate the overall time vector across all the states
-    state_array = [mode_0.final_state, mode_1.final_state, mode_2.final_state]
+    # state_array = [mode_0.final_state, mode_1.final_state, mode_2.final_state]
+    state_array = [mode_1.final_state]
     time_vec_overall, actual_overall, desired_overall = calcuate_overall_time_and_pose(state_array)
 
     plot_state_error(actual_overall, desired_overall, time_vec_overall)
@@ -640,7 +637,7 @@ def calcuate_overall_time_and_pose(state_array):
 
     print("overall shape of actual_state_ved was", (overall_actual_state_vec.shape))
     print("overall shape of desired_state_ved was", (overall_desired_state_vec.shape))
-    print("overall time vec is", len(overall_time_vec))
+    print("overall time vec is", [round(item, 3) for item in overall_time_vec])
 
     return overall_time_vec, overall_actual_state_vec, overall_desired_state_vec
 
