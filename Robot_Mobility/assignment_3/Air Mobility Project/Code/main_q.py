@@ -553,6 +553,7 @@ def state_machine(question):
     states_saved = store_idle_pos(mode_0)
     mode_0.state_storage(states_saved)
     print("mode0 finish time is", mode_0.final_time)
+    # print("mode0 final pose are", states_saved)
 
     mode_1_params = [ [0,0,0,0], [0,0,1,0], 10, 100]
     mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, mode_0.final_time)
@@ -576,7 +577,7 @@ def state_machine(question):
     print("\nmode3 finish time is", mode_3.final_time)
 
     mode_4_params = [ [5,0,1,0], [5,0,0,0], 10, 100]
-    mode_4 = state_descriptor.StateDescriptor(3, mode_4_params, mode_3.final_time)
+    mode_4 = state_descriptor.StateDescriptor(4, mode_4_params, mode_3.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_4)
     mode_4.state_storage(states_saved)

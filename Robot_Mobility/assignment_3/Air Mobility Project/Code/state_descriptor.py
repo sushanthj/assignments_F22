@@ -47,7 +47,7 @@ class StateDescriptor:
                 trajectory_state[8,i] = waypoints[3, current_waypoint_number]
             return trajectory_state
             
-        elif self.mode == 1:
+        elif self.mode == 1 or self.mode == 3 or self.mode == 4:
             #? FOR VELOCITY PROFILE
             waypoints, waypoint_times = self.generate_waypoints(0)
             trajectory_state = np.zeros((15, self.max_iteration))
@@ -65,7 +65,7 @@ class StateDescriptor:
                 # update the state's yaw value
                 trajectory_state[8,i] = waypoints[3, current_waypoint_number]
 
-                # const positive accel upwards
+                # const positive accel upwards  
                 if current_waypoint_number < num_steps: #int((len(waypoint_times)-1)/2):
                     # v = u + a*t
                     z_vel = z_vel + const_acc*self.time_step
