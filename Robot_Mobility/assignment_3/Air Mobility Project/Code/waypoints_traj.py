@@ -36,6 +36,12 @@ def lookup_waypoints(question):
         waypoint_times = np.arange(start=0, stop=25, step=0.1)
         const_acc = 0.02 # m/s2
         return([waypoints, waypoint_times, const_acc])
+    
+    elif int(question) == 4:
+        waypoints = np.array([[0, 0, 0, 0],[0, 0, 0, 0], [0, 0, 0, 0], [0,0,0,0]])
+        waypoint_times = np.array([0,0,0,0])
+        const_acc = None
+        return([waypoints, waypoint_times, const_acc])
 
 def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_step, const_acc):
     '''
@@ -116,5 +122,9 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
             
             trajectory_state[2, i] = z_dist
             trajectory_state[5, i] = z_vel
+    
+    elif int(question) == 4:
+        # sample code for hover trajectory
+        trajectory_state = np.zeros((15, 2))
 
     return (trajectory_state)

@@ -84,8 +84,8 @@ def position_controller(current_state,desired_state,params,question, time_step):
     
     des_acc = np.array(([x_dot_dot],[y_dot_dot],[z_dot_dot]))
 
-    print("desired accels are \n", des_acc)
-    print("error in xyz accels are \n", err_xyz)
+    # print("desired accels are \n", des_acc)
+    # print("error in xyz accels are \n", err_xyz)
 
 
     # find the rotation matrix to map thrust to body frame
@@ -100,7 +100,7 @@ def position_controller(current_state,desired_state,params,question, time_step):
     gravity_vec = np.array(([0],[0],[params["gravity"]]))
     
     thrust = params["mass"]*(np.array(([0,0,1])) @ (gravity_vec + des_acc + err_xyz))
-    print("thrust was", thrust[0])
+    # print("thrust was", thrust[0])
 
     return thrust, des_acc + err_xyz, R_eb
 
@@ -137,7 +137,7 @@ def attitude_by_flatness(desired_state,params):
                                     [np.cos(psi_des), np.sin(psi_des)]))) @ des_acc[0:2,:])
     phi_thetha_psi_des = np.vstack((phi_thetha_des, psi_des))
 
-    print("phi_theta_psi_des is \n", phi_thetha_psi_des)
+    # print("phi_theta_psi_des is \n", phi_thetha_psi_des)
     ################
 
     ################ Calculate "omega"
@@ -151,7 +151,7 @@ def attitude_by_flatness(desired_state,params):
                                     [-np.sin(psi_des), np.cos(psi_des)]))) @ des_acc_2[0:2,:])
     phi_dot_thetha_dot_psi_dot_des = np.vstack((phi_dot_thetha_dot_des, psi_dot_des))
 
-    print("phi_dot_thetha_dot_psi_dot_des is \n", phi_dot_thetha_dot_psi_dot_des)
+    # print("phi_dot_thetha_dot_psi_dot_des is \n", phi_dot_thetha_dot_psi_dot_des)
     #################
     
     return [phi_thetha_psi_des[0,0], 
@@ -208,7 +208,7 @@ def attitude_controller(params, current_state,desired_state,question):
     phi_dot, thetha_dot, psi_dot = current_state["omega"]
     phi_dot_des, thetha_dot_des, psi_dot_des = desired_state["omega"]
 
-    if int(question) == 2 or int(question) == 3:
+    if True:
         zeroth_order_error = np.array((
                                        [phi - phi_des],
                                        [thetha - thetha_des],
@@ -224,7 +224,7 @@ def attitude_controller(params, current_state,desired_state,question):
                                         (Kd_mat @ first_order_error)
                                        )
         
-        print("torques is", torques)
+        # print("torques is", torques)
         return torques
 
 
@@ -259,7 +259,7 @@ def motor_model(F,M,current_state,params):
     d = params["arm_length"]
 
     curr_rpm = np.expand_dims(np.array(current_state["rpm"]), axis=1)
-    print("current rpm is", curr_rpm)
+    # print("current rpm is", curr_rpm)
     mix = np.array((
                   [c_t, c_t, c_t, c_t],
                   [0, d*c_t, 0, -d*c_t],
@@ -275,7 +275,7 @@ def motor_model(F,M,current_state,params):
 
     T_motor_act = act_force_moment[1:4,0]
     F_motor_act = act_force_moment[0,0]
-    print("T actual is", T_motor_act)
+    # print("T actual is", T_motor_act)
 
     #? Find desired rpm
     force_torq_mat = np.vstack((np.expand_dims(F, axis=0), M))
@@ -290,11 +290,11 @@ def motor_model(F,M,current_state,params):
         else:
             pass
 
-    print("desired rpm is", fixed_desired_rpm)
+    # print("desired rpm is", fixed_desired_rpm)
     
     #? Find rpm_dot
     w_dot = k_m * (fixed_desired_rpm - curr_rpm)
-    print("w dot is", w_dot)
+    # print("w dot is", w_dot)
 
     return F_motor_act, T_motor_act, w_dot
 
@@ -321,21 +321,51 @@ def dynamics(t,state,params,F_actual,M_actual,rpm_motor_dot, rot_matrix):
     # TO DO:
     x,y,z,xdot,ydot,zdot,phi,theta,psi,phidot,thetadot,psidot,rpm1, rpm2, rpm3, rpm4 = state
 
-    F_eb = (rot_matrix @ np.array(([[0],[0],[F_actual]]))) - (params["mass"] * np.array(([[0],[0],[params["gravity"]]])))
+    F_eb = (rot_matrix @ np.array(([[0],[0],[F_actual]]))) - \
+            (params["mass"] * np.array(([[0],[0],[params["gravity"]]])))
+    
     # find translational accelerations
-    xddot, yddot, zddot = (F_eb / params["mass"])[0,0], (F_eb / params["mass"])[1,0], (F_eb / params["mass"])[2,0]
+    xddot, yddot, zddot = (F_eb / params["mass"])[0,0], \
+                          (F_eb / params["mass"])[1,0], \
+                          (F_eb / params["mass"])[2,0]
 
     # find rotational accelerations
     rot_acc = np.linalg.inv(params["inertia"]) @ M_actual
     phiddot, thetaddot, psiddot = rot_acc[0], rot_acc[1], rot_acc[2]
 
-    state_dot = [xdot, ydot, zdot, xddot, yddot, zddot, phidot, thetadot, psidot, phiddot, thetaddot, psiddot, rpm_motor_dot[0,0], rpm_motor_dot[1,0], rpm_motor_dot[2,0], rpm_motor_dot[3,0]]
+    state_dot = [
+                 xdot,
+                 ydot,
+                 zdot,
+                 xddot,
+                 yddot, 
+                 zddot, 
+                 phidot, 
+                 thetadot, 
+                 psidot, 
+                 phiddot, 
+                 thetaddot, 
+                 psiddot, 
+                 rpm_motor_dot[0,0], 
+                 rpm_motor_dot[1,0], 
+                 rpm_motor_dot[2,0], 
+                 rpm_motor_dot[3,0]
+                ]
     return state_dot
 
 
 
 def main(question, state_descp):
+    """
+    Main control loop for given start and end states
 
+    Args:
+        question    : question number from assignment
+        state_descp : object from state machine
+
+    Returns:
+        actual_and_desired_states: tracking history of states
+    """
     # Set up quadrotor physical parameters
     params = {"mass": 0.770, "gravity": 9.80665, "arm_length": 0.1103, "motor_spread_angle": 0.925, \
         "thrust_coefficient": 8.07e-9, "moment_scale": 1.3719e-10, "motor_constant": 36.5, "rpm_min": 3000, \
@@ -350,8 +380,12 @@ def main(question, state_descp):
     # Set the simualation parameters
     time_initial = 0
     time_final = 20.1
+    finish_time = time_final
     time_step = 0.005 # in secs
+    finish_time_iteration = 0
     # 0.005 sec is a reasonable time step for this system
+
+    print("\n mode number in control loop is", state_descp.mode)
     
     # vector of timesteps
     time_vec = np.arange(time_initial, time_final, time_step).tolist()
@@ -370,10 +404,18 @@ def main(question, state_descp):
 
     #Create a trajectory consisting of desired state at each time step
     # Some aspects of this state we can plan in advance, some will be filled during the loop
-    trajectory_matrix = trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_step, const_acc)
+    trajectory_matrix = trajectory_planner(
+                                            question, 
+                                            waypoints, 
+                                            max_iteration, 
+                                            waypoint_times, 
+                                            time_step, 
+                                            const_acc
+                                            )
     # [x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
 
     if int(question) == 4:
+        time_initial, time_final, time_step, time_vec, max_iteration = state_descp.time_params()
         # get trajectory from the state_descriptor class
         trajectory_matrix = state_descp.traj_generator()
 
@@ -384,12 +426,10 @@ def main(question, state_descp):
     #? the quad is assumed to be at 0.5?
     actual_state_matrix[:,0] = np.vstack((state[0:12], np.array([[0],[0],[0]])))[:,0]
     
-    # trial outputs
-    print("\n waypoints are \n", waypoints)
-    
     #Create a matrix to hold the actual desired state at each time step
 
-    # Need to store the actual desired state for acc, omega dot, omega as it will be updated by the controller
+    # Need to store the actual desired state for acc, omega dot, 
+    # omega as it will be updated by the controller
     actual_desired_state_matrix = np.zeros((15,max_iteration))
     
     # state list created for the RK45 solver
@@ -400,18 +440,32 @@ def main(question, state_descp):
     for i in range(max_iteration-1):
         # break
         # convert current state to stuct for control functions
-        current_state = {"pos":state_list[0:3],"vel":state_list[3:6],"rot":state_list[6:9], \
-            "omega":state_list[9:12],"rpm":state_list[12:16]}
+        current_state = {
+                        "pos":state_list[0:3],
+                        "vel":state_list[3:6],
+                        "rot":state_list[6:9],
+                        "omega":state_list[9:12],
+                        "rpm":state_list[12:16]
+                        }
         # print("current state is \n", current_state)
         
         # Get desired state from matrix, put into struct for control functions
-        desired_state = {"pos":trajectory_matrix[0:3,i],"vel":trajectory_matrix[3:6,i],\
-            "rot":trajectory_matrix[6:9,i],"omega":trajectory_matrix[9:12,i],"acc":trajectory_matrix[12:15,i]}
+        desired_state = {
+                        "pos":trajectory_matrix[0:3,i],
+                        "vel":trajectory_matrix[3:6,i],
+                        "rot":trajectory_matrix[6:9,i],
+                        "omega":trajectory_matrix[9:12,i],
+                        "acc":trajectory_matrix[12:15,i]
+                        }
         # print("desired state is \n", desired_state)
         
         # Get desired acceleration from position controller
-        [F, desired_state["acc"], rot_matrix] = position_controller(current_state,desired_state,params,question, time_step)
-        print("")
+        [F, desired_state["acc"], rot_matrix] = position_controller(
+                                                                    current_state,
+                                                                    desired_state,
+                                                                    params,question,
+                                                                    time_step
+                                                                    )
         
         # Computes desired pitch and roll angles
         desired_state["rot"], desired_state["omega"] = attitude_by_flatness(desired_state,params)        
@@ -425,7 +479,13 @@ def main(question, state_descp):
         # Get the change in state from the quadrotor dynamics
         time_int = tuple((time_vec[i],time_vec[i+1]))
 
-        sol = solve_ivp(dynamics,time_int,state_list,args=(params,F_actual,M_actual,rpm_motor_dot, rot_matrix),t_eval=np.linspace(time_vec[i],time_vec[i+1],(int(time_step/0.00005))))
+        sol = solve_ivp(
+                        dynamics,
+                        time_int,
+                        state_list,
+                        args=(params,F_actual,M_actual,rpm_motor_dot, rot_matrix),
+                        t_eval=np.linspace(time_vec[i],time_vec[i+1],(int(time_step/0.00005)))
+                        )
         
         state_list = sol.y[:,-1]
         acc = (sol.y[3:6,-1]-sol.y[3:6,-2])/(sol.t[-1]-sol.t[-2])
@@ -440,7 +500,20 @@ def main(question, state_descp):
         # Update actual state matrix (16 x N numpy array)
         actual_state_matrix[0:12,i+1] = state_list[0:12]
         actual_state_matrix[12:15,i+1] = acc
-    
+
+        if int(question) == 4:
+            convergence = check_convergence(state_descp, actual_state_matrix[:,i+1])
+            if convergence is True:
+                finish_time_iteration = (i+2)
+                finish_time = (i+2)*time_step
+                actual_state_matrix = actual_state_matrix[:,0:i+2]
+                actual_desired_state_matrix = actual_desired_state_matrix[:,0:i+2]
+                print("breaking iteration was", i+2)
+                print("time vec shape is", len(time_vec[:i+2]))
+                break
+            else:
+                continue
+
     if int(question) < 4:
         # plot for values and errors
         plot_state_error(actual_state_matrix,actual_desired_state_matrix,time_vec)
@@ -451,8 +524,23 @@ def main(question, state_descp):
         # plot desired pose vs actual pose
         plot_des_vs_track(actual_state_matrix, actual_desired_state_matrix, time_vec)
     else:
-        return {"actual_states" : actual_state_matrix, "desired_states" : actual_desired_state_matrix, 
-                "time_ved": time_vec}
+        if convergence is False:
+            print("did not converge")
+            finish_time_iteration = max_iteration
+            finish_time = (max_iteration)*time_step
+            actual_state_matrix = actual_state_matrix
+            actual_desired_state_matrix = actual_desired_state_matrix
+            print("breaking iteration was", max_iteration)
+            print("time vec shape is", len(time_vec))
+        return {
+                "actual_states" : actual_state_matrix, 
+                "desired_states" : actual_desired_state_matrix, 
+                "time_vec": time_vec, 
+                "finish_time_iter": finish_time_iteration, 
+                "finish_time": finish_time,
+                "time_initial": time_initial, 
+                "time_step": time_step
+                }
 
 def state_machine(question):
     """
@@ -462,18 +550,101 @@ def state_machine(question):
                                      completion_duration, num_steps ]
     """
 
-    mode_0_params = [ [0,0,0,0], [0,0,0,0], 2, 10]
+    mode_0_params = [ [0,0,0,0], [0,0,0,0], 2, 100]
     mode_0 = state_descriptor.StateDescriptor(0, mode_0_params, 0)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_0)
     mode_0.state_storage(states_saved)
 
-    mode_1_params = [ [0,0,0,0], [0,0,0,1], 2, 100]
+    mode_1_params = [ [0,0,0,0], [0,0,1,0], 2, 100]
     mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, mode_0.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_1)
-    mode_0.state_storage(states_saved)
-        
+    mode_1.state_storage(states_saved)
+
+    mode_2_params = [ [0,0,1,0], [0,0,1,0], 5, 100]
+    mode_2 = state_descriptor.StateDescriptor(2, mode_2_params, mode_1.final_time)
+    # track quad and save the actual vs desired states
+    states_saved = main(question, mode_2)
+    mode_2.state_storage(states_saved)
+
+    # calculate the overall time vector across all the states
+    state_array = [mode_0.final_state, mode_1.final_state, mode_2.final_state]
+    time_vec_overall, actual_overall, desired_overall = calcuate_overall_time_and_pose(state_array)
+
+    plot_state_error(actual_overall, desired_overall, time_vec_overall)
+
+    # plot for 3d visualization
+    plot_position_3d(actual_overall, desired_overall)
+
+    # plot desired pose vs actual pose
+    plot_des_vs_track(actual_overall, desired_overall, time_vec_overall)
+
+
+def check_convergence(state_descp, actual_state):
+    """
+    Check if robot has reached the destination and record state and time
+    Args:
+        state_descp  : Object of state descriptor
+        actual_state : live tracking of controller
+
+    Returns:
+        convergence_condition: 1 = converged, 0 = not_yet_converged
+    """
+    end_point_des = np.array(state_descp.params[1])
+    x_actual, y_actual, z_actual, yaw_actual = actual_state[0], \
+                                               actual_state[1], \
+                                               actual_state[2], \
+                                               actual_state[8]
+    
+    end_point_actual = np.array([x_actual, y_actual, z_actual, yaw_actual])
+    error_in_pos = np.linalg.norm((end_point_des - end_point_actual))
+    if error_in_pos < 0.1:
+        print("converged")
+        return True
+    else:
+        return False
+
+def calcuate_overall_time_and_pose(state_array):
+    """
+    Combines the recorded states and time vectors of each state
+    Args:
+        state_array (list): array of state tracking histories saved in dict form
+    """
+    overall_time_vec = []
+    overall_actual_state_vec = np.zeros(shape=(15,1))
+    overall_desired_state_vec = np.zeros(shape=(15,1))
+
+    mode_num = 0
+
+    for state in state_array:
+        # combine the time vectors
+        print("\n mode number is", mode_num)
+        time_vec = state["time_vec"]
+        time_finish_iter = state["finish_time_iter"]
+        time_vec_cut = time_vec[:time_finish_iter]
+        print("shape of time vec is", len(time_vec_cut))
+        overall_time_vec = overall_time_vec + time_vec_cut
+
+        # combine the actual states, combine desired states
+        print("shape of artificial_state val is",overall_actual_state_vec.shape)
+        print("shape of actual val is", state["actual_states"].shape)
+        overall_actual_state_vec = np.concatenate((overall_actual_state_vec, state["actual_states"]), axis=1)
+        overall_desired_state_vec = np.concatenate((overall_desired_state_vec, state["desired_states"]), axis=1)
+        mode_num += 1
+
+    # remove the null values in overall_state_arrays
+    overall_actual_state_vec = overall_actual_state_vec[:,1:]
+    overall_desired_state_vec = overall_desired_state_vec[:,1:]
+    overall_time_vec = overall_time_vec
+
+    print("overall shape of actual_state_ved was", (overall_actual_state_vec.shape))
+    print("overall shape of desired_state_ved was", (overall_desired_state_vec.shape))
+    print("overall time vec is", len(overall_time_vec))
+
+    return overall_time_vec, overall_actual_state_vec, overall_desired_state_vec
+
+
 if __name__ == '__main__':
     '''
     Usage: main takes in a question number and executes all necessary code to
