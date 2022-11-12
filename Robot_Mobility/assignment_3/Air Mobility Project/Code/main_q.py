@@ -431,6 +431,7 @@ def main(question, state_descp):
     # Need to store the actual desired state for acc, omega dot, 
     # omega as it will be updated by the controller
     actual_desired_state_matrix = np.zeros((15,max_iteration))
+    actual_desired_state_matrix[:,0] = np.vstack((state[0:12], np.array([[0],[0],[0]])))[:,0]
     
     # state list created for the RK45 solver
     state_list = state.T.tolist()
@@ -645,11 +646,11 @@ def calcuate_overall_time_and_pose(state_array):
         time_finish_iter = state["finish_time_iter"]
         time_vec_cut = time_vec[:time_finish_iter]
         overall_time_vec = overall_time_vec + time_vec_cut
-        print("for this mode the desired states were", state["desired_states"][0:3,0])
-        print("for this mode the desired states were", state["desired_states"][0:3,1])
-        print("for this mode the desired states were", state["desired_states"][0:3,-1])
-        print("for this mode the desired states were", state["desired_states"][0:3,-2])
-        print("\n")
+        # print("for this mode the desired states were", state["desired_states"][0:3,0])
+        # print("for this mode the desired states were", state["desired_states"][0:3,1])
+        # print("for this mode the desired states were", state["desired_states"][0:3,-1])
+        # print("for this mode the desired states were", state["desired_states"][0:3,-2])
+        # print("\n")
 
         # combine the actual states, combine desired states
         overall_actual_state_vec = np.concatenate((overall_actual_state_vec, state["actual_states"]), axis=1)
