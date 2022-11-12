@@ -590,6 +590,7 @@ def state_machine(question):
     print("\n")
 
     print("executing mode 3: Trajectory")
+    # Note: the start pos of this mode should always be same as the end pos of mode_2
     mode_3_params = [ [0,0,1,0], [2,0,1,0], 10, 100]
     mode_3 = state_descriptor.StateDescriptor(3, mode_3_params, mode_2.final_time)
     # track quad and save the actual vs desired states

@@ -38,10 +38,9 @@ class StateDescriptor:
 
         if self.mode == 0:
             waypoints, waypoint_times = self.generate_waypoints(0)
-
             trajectory_state = np.zeros((15, self.max_iteration))
-
-            #[x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
+            # [x, y, z, xdot, ydot, zdot, phi, theta, psi, 
+            #  phidot, thetadot, psidot, xacc, yacc, zacc]
             trajectory_state, waypoints, = self.generate_trajectory(waypoint_times, 
                                                                     waypoints, 
                                                                     trajectory_state)
@@ -67,7 +66,8 @@ class StateDescriptor:
             print("waypoint times is", waypoint_times.shape)
             
             trajectory_state = np.zeros((15, self.max_iteration))
-            #[x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
+            #[x, y, z, xdot, ydot, zdot, phi, theta, psi, 
+            # phidot, thetadot, psidot, xacc, yacc, zacc]
             trajectory_state, waypoints, = self.generate_trajectory(waypoint_times, 
                                                                     waypoints, 
                                                                     trajectory_state)
@@ -81,7 +81,8 @@ class StateDescriptor:
             else:
                 waypoints, waypoint_times = self.generate_waypoints(start_points[2])
                 trajectory_state = np.zeros((15, self.max_iteration))
-                #[x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
+                #[x, y, z, xdot, ydot, zdot, phi, theta, psi, 
+                # phidot, thetadot, psidot, xacc, yacc, zacc]
                 trajectory_state, waypoints, = self.generate_trajectory(waypoint_times, 
                                                                         waypoints, 
                                                                         trajectory_state)
@@ -104,7 +105,8 @@ class StateDescriptor:
             print("waypoint times is", waypoint_times.shape)
             
             trajectory_state = np.zeros((15, self.max_iteration))
-            #[x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
+            #[x, y, z, xdot, ydot, zdot, phi, theta, psi, 
+            # phidot, thetadot, psidot, xacc, yacc, zacc]
             trajectory_state, waypoints, = self.generate_trajectory(waypoint_times, 
                                                                     waypoints, 
                                                                     trajectory_state)
@@ -133,7 +135,9 @@ class StateDescriptor:
                              np.zeros(num_steps)
                             ])
         step_size = (duration/num_steps)
-        waypoint_times = np.arange(start=self.start_time, stop=self.final_time+step_size, step=step_size)
+        waypoint_times = np.arange(start=self.start_time, 
+                                   stop=self.final_time+step_size, 
+                                   step=step_size)
         print("waypoints in state descp class are ", waypoints.shape)
         print("waypoint times is", waypoint_times.shape)
         return([waypoints, waypoint_times])
@@ -143,7 +147,8 @@ class StateDescriptor:
         for i in range(0, self.max_iteration):
             # update the curr_waypoint_number depending on simulation iteration time
             if current_waypoint_number < len(waypoint_times)-1:
-                if (i*self.time_step) >= (waypoint_times[current_waypoint_number+1] - self.start_time):
+                if (i*self.time_step) >= (waypoint_times[current_waypoint_number+1] 
+                                            - self.start_time):
                     current_waypoint_number +=1
 
             trajectory_state[0:3, i] = waypoints[0:3, current_waypoint_number]
