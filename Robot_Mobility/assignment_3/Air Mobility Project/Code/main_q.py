@@ -87,9 +87,15 @@ def position_controller(current_state,desired_state,params,question, time_step):
 
     # find the rotation matrix to map thrust to body frame
     # Rx(phi), Ry(thetha), Rz(psi)
-    Rx = np.array(([1,0,0],[0, np.cos(phi), -np.sin(phi)],[0, np.sin(phi), np.cos(phi)]))
-    Ry = np.array(([np.cos(thetha), 0, np.sin(thetha)], [0,1,0], [-np.sin(thetha), 0, np.cos(thetha)]))
-    Rz = np.array(([np.cos(psi), -np.sin(psi), 0],[np.sin(psi), np.cos(psi), 0], [0,0,1]))
+    Rx = np.array(([1,0,0],
+                   [0, np.cos(phi), -np.sin(phi)],
+                   [0, np.sin(phi), np.cos(phi)]))
+    Ry = np.array(([np.cos(thetha), 0, np.sin(thetha)], 
+                   [0,1,0], 
+                   [-np.sin(thetha), 0, np.cos(thetha)]))
+    Rz = np.array(([np.cos(psi), -np.sin(psi), 0],
+                   [np.sin(psi), np.cos(psi), 0], 
+                   [0,0,1]))
 
     R_eb = Rz @ (Ry @ Rx)
     # R_be = R_eb.T
@@ -364,9 +370,19 @@ def main(question, state_descp):
         actual_and_desired_states: tracking history of states
     """
     # Set up quadrotor physical parameters
-    params = {"mass": 0.770, "gravity": 9.80665, "arm_length": 0.1103, "motor_spread_angle": 0.925, \
-        "thrust_coefficient": 8.07e-9, "moment_scale": 1.3719e-10, "motor_constant": 36.5, "rpm_min": 3000, \
-            "rpm_max": 20000, "inertia": np.diag([0.0033,0.0033,0.005]), "COM_vertical_offset": 0.05}
+    params = {
+              "mass": 0.770, 
+              "gravity": 9.80665, 
+              "arm_length": 0.1103, 
+              "motor_spread_angle": 0.925,
+              "thrust_coefficient": 8.07e-9, 
+              "moment_scale": 1.3719e-10, 
+              "motor_constant": 36.5, 
+              "rpm_min": 3000,
+              "rpm_max": 20000, 
+              "inertia": np.diag([0.0033,0.0033,0.005]), 
+              "COM_vertical_offset": 0.05
+              }
     
     # Get the waypoints for this specific question
     [waypoints, waypoint_times, const_acc] = lookup_waypoints(question)
@@ -549,7 +565,7 @@ def state_machine(question):
                                      completion_duration, num_steps ]
     """
 
-    print("executing mode 0")
+    print("executing mode 0: Idle")
     mode_0_params = [ [0,0,0,0], [0,0,0,0], 2, 2]
     mode_0 = state_descriptor.StateDescriptor(0, mode_0_params, 0)
     # since quad is idle, save states directly
@@ -557,7 +573,7 @@ def state_machine(question):
     mode_0.state_storage(states_saved)
     print("\n")
 
-    print("executing mode 1")
+    print("executing mode 1: Takeoff")
     mode_1_params = [ [0,0,0,0], [0,0,1,0], 10, 100]
     mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, mode_0.final_time)
     # track quad and save the actual vs desired states
@@ -565,7 +581,7 @@ def state_machine(question):
     mode_1.state_storage(states_saved)
     print("\n")
 
-    print("executing mode 2")
+    print("executing mode 2: Hover")
     mode_2_params = [ [0,0,1,0], [0,0,1,0], 5, 5]
     mode_2 = state_descriptor.StateDescriptor(2, mode_2_params, mode_1.final_time)
     # track quad and save the actual vs desired states
@@ -573,7 +589,7 @@ def state_machine(question):
     mode_2.state_storage(states_saved)
     print("\n")
 
-    print("executing mode 3")
+    print("executing mode 3: Trajectory")
     mode_3_params = [ [0,0,1,0], [2,0,1,0], 10, 100]
     mode_3 = state_descriptor.StateDescriptor(3, mode_3_params, mode_2.final_time)
     # track quad and save the actual vs desired states
@@ -581,7 +597,7 @@ def state_machine(question):
     mode_3.state_storage(states_saved)
     print("\n")
 
-    print("executing mode 4")
+    print("executing mode 4: Landing")
     mode_4_params = [ [2,0,1,0], [2,0,0,0], 20, 100]
     mode_4 = state_descriptor.StateDescriptor(4, mode_4_params, mode_3.final_time)
     # track quad and save the actual vs desired states
@@ -590,7 +606,12 @@ def state_machine(question):
     print("\n")
 
     # calculate the overall time vector across all the states
-    state_array = [mode_0.final_state, mode_1.final_state, mode_2.final_state, mode_3.final_state, mode_4.final_state]
+    state_array = [ mode_0.final_state, 
+                    mode_1.final_state, 
+                    mode_2.final_state, 
+                    mode_3.final_state, 
+                    mode_4.final_state
+                    ]
     time_vec_overall, actual_overall, desired_overall = calcuate_overall_time_and_pose(state_array)
 
     plot_state_error(actual_overall, desired_overall, time_vec_overall)
@@ -653,8 +674,12 @@ def calcuate_overall_time_and_pose(state_array):
         # print("\n")
 
         # combine the actual states, combine desired states
-        overall_actual_state_vec = np.concatenate((overall_actual_state_vec, state["actual_states"]), axis=1)
-        overall_desired_state_vec = np.concatenate((overall_desired_state_vec, state["desired_states"]), axis=1)
+        overall_actual_state_vec = np.concatenate((overall_actual_state_vec, 
+                                                    state["actual_states"]), 
+                                                    axis=1)
+        overall_desired_state_vec = np.concatenate((overall_desired_state_vec, 
+                                                    state["desired_states"]), 
+                                                    axis=1)
         mode_num += 1
 
     # remove the null values in overall_state_arrays
@@ -665,7 +690,7 @@ def calcuate_overall_time_and_pose(state_array):
     return overall_time_vec, overall_actual_state_vec, overall_desired_state_vec
 
 def store_idle_pos(state_descp):
-    time_initial, time_final, time_step, time_vec, max_iteration = state_descp.time_params()
+    time_initial, _, time_step, time_vec, max_iteration = state_descp.time_params()
     finish_time_iteration = max_iteration
     finish_time = (max_iteration)*time_step + time_initial
     actual_state_matrix, _ = state_descp.traj_generator()
