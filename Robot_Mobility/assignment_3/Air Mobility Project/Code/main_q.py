@@ -69,8 +69,8 @@ def position_controller(current_state,desired_state,params,question, time_step):
     Kp2 = 17
     Kd2 = 6.6
 
-    Kp3 = 18
-    Kd3 = 3.2
+    Kp3 = 21
+    Kd3 = 5
 
     # TO DO:
     Kp = np.diag((Kp1, Kp2, Kp3))
@@ -414,7 +414,11 @@ def main(question, state_descp):
         time_initial, time_final, time_step, time_vec, max_iteration = state_descp.time_params()
         finish_time_iteration = max_iteration-1
         # get trajectory from the state_descriptor class
-        trajectory_matrix = state_descp.traj_generator()
+        trajectory_matrix, waypoints = state_descp.traj_generator()
+        state[0] = waypoints[0,0]
+        state[1] = waypoints[1,0]
+        state[2] = waypoints[2,0]
+        state[8] = waypoints[3,0]
 
     # Create a matrix to hold the actual state at each time step
     actual_state_matrix = np.zeros((15,max_iteration))
@@ -547,41 +551,41 @@ def state_machine(question):
                                      completion_duration, num_steps ]
     """
 
-    mode_0_params = [ [0,0,0,0], [0,0,0,0], 2, 100]
+    mode_0_params = [ [0,0,0,0], [0,0,0,0], 2, 2]
     mode_0 = state_descriptor.StateDescriptor(0, mode_0_params, 0)
     # since quad is idle, save states directly
     states_saved = store_idle_pos(mode_0)
     mode_0.state_storage(states_saved)
-    print("mode0 finish time is", mode_0.final_time)
+    print("mode0 finish time is", mode_0.final_time, "\n")
     # print("mode0 final pose are", states_saved)
 
-    mode_1_params = [ [0,0,0,0], [0,0,1,0], 10, 100]
+    mode_1_params = [ [0,0,0,0], [0,0,1,0], 20, 100]
     mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, mode_0.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_1)
     mode_1.state_storage(states_saved)
-    print("mode1 finish time is", mode_1.final_time)
+    print("mode1 finish time is", mode_1.final_time, "\n")
 
-    mode_2_params = [ [0,0,1,0], [0,0,1,0], 5, 100]
+    mode_2_params = [ [0,0,1,0], [0,0,1,0], 5, 5]
     mode_2 = state_descriptor.StateDescriptor(2, mode_2_params, mode_1.final_time)
     # track quad and save the actual vs desired states
     states_saved = store_idle_pos(mode_2)
     mode_2.state_storage(states_saved)
-    print("\nmode2 finish time is", mode_2.final_time)
+    print("\nmode2 finish time is", mode_2.final_time, "\n")
 
-    mode_3_params = [ [0,0,1,0], [5,0,1,0], 10, 100]
+    mode_3_params = [ [0,0,1,0], [2,0,1,0], 20, 100]
     mode_3 = state_descriptor.StateDescriptor(3, mode_3_params, mode_2.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_3)
     mode_3.state_storage(states_saved)
-    print("\nmode3 finish time is", mode_3.final_time)
+    print("\nmode3 finish time is", mode_3.final_time, "\n")
 
-    mode_4_params = [ [5,0,1,0], [5,0,0,0], 10, 100]
+    mode_4_params = [ [2,0,1,0], [2,0,0,0], 20, 100]
     mode_4 = state_descriptor.StateDescriptor(4, mode_4_params, mode_3.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_4)
     mode_4.state_storage(states_saved)
-    print("\nmode3 finish time is", mode_4.final_time)
+    print("\nmode4 finish time is", mode_4.final_time, "\n")
 
 
 
@@ -616,7 +620,7 @@ def check_convergence(state_descp, actual_state):
     
     end_point_actual = np.array([x_actual, y_actual, z_actual, yaw_actual])
     error_in_pos = np.linalg.norm((end_point_des - end_point_actual))
-    if error_in_pos < 0.1:
+    if error_in_pos < 0.01:
         print("converged")
         return True
     else:
@@ -659,7 +663,7 @@ def store_idle_pos(state_descp):
     time_initial, time_final, time_step, time_vec, max_iteration = state_descp.time_params()
     finish_time_iteration = max_iteration
     finish_time = (max_iteration)*time_step + time_initial
-    actual_state_matrix = state_descp.traj_generator()
+    actual_state_matrix, _ = state_descp.traj_generator()
     print("shape of actual state matrix is", actual_state_matrix.shape)
     actual_desired_state_matrix = deepcopy(actual_state_matrix)
     saved_state = {
