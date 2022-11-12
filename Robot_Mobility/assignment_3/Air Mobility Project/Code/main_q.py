@@ -574,7 +574,7 @@ def state_machine(question):
     print("\n")
 
     print("executing mode 1: Takeoff")
-    mode_1_params = [ [0,0,0,0], [0,0,1,0], 10, 100]
+    mode_1_params = [ [0,0,0,0], [0,0,1,0], 20, 100]
     mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, mode_0.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_1)
@@ -591,7 +591,7 @@ def state_machine(question):
 
     print("executing mode 3: Trajectory")
     # Note: the start pos of this mode should always be same as the end pos of mode_2
-    mode_3_params = [ [0,0,1,0], [2,0,1,0], 10, 100]
+    mode_3_params = [ [0,0,1,0], [2,1,1,0], 10, 100]
     mode_3 = state_descriptor.StateDescriptor(3, mode_3_params, mode_2.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_3)
@@ -599,7 +599,7 @@ def state_machine(question):
     print("\n")
 
     print("executing mode 4: Landing")
-    mode_4_params = [ [2,0,1,0], [2,0,0,0], 20, 100]
+    mode_4_params = [ [2,1,1,0], [2,1,0,0], 20, 100]
     mode_4 = state_descriptor.StateDescriptor(4, mode_4_params, mode_3.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_4)

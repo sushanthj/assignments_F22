@@ -90,13 +90,23 @@ class StateDescriptor:
                 return trajectory_state, waypoints
         
         elif self.mode == 3:
-            dist_step = (self.end[0] - self.start[0])/num_steps
-            x_vals = np.arange(start=self.start[0], stop=self.end[0]+dist_step, step=dist_step)
+            print("start and end are", self.start, self.end)
+            changed_states = np.where(np.array(self.start) != np.array(self.end))
+            print("changed states are", changed_states)
+            # create dummy values
+            vals = [np.ones(shape=num_steps+1)*self.start[0],
+                    np.ones(shape=num_steps+1)*self.start[1], 
+                    np.ones(shape=num_steps+1)*self.start[2],  
+                    np.ones(shape=num_steps+1)*self.start[3]]
 
-            waypoints = np.array([  x_vals,
-                                    np.ones(shape=x_vals.shape)*self.start[1], 
-                                    np.ones(shape=x_vals.shape)*self.start[2],  
-                                    np.ones(shape=x_vals.shape)*self.start[3]])
+            for i in changed_states[0].tolist():    
+                dist_step = (self.end[i] - self.start[i])/num_steps
+                vals[i] = np.arange(start=self.start[i], 
+                                         stop=self.end[i]+dist_step, 
+                                         step=dist_step)
+            
+            waypoints = np.array([vals[0], vals[1], vals[2], vals[3]])
+
             print("waypoints in state descp class are ", waypoints.shape)
             step_size = duration/num_steps
             waypoint_times = np.arange(start=self.start_time, 
