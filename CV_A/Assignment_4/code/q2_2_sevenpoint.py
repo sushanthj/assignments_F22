@@ -26,12 +26,90 @@ Q2.2: Seven Point Algorithm for calculating the fundamental matrix
 def sevenpoint(pts1, pts2, M):
 
     Farray = []
-    # ----- TODO -----
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    
+    x1, x2 = pts1, pts2
+    # Doing the M normaliazation
+    moved_scaled_x1 = x1/M
+    moved_scaled_x2 = x2/M
+    t = np.diag([1/M, 1/M, 1])
+    F1, F2 = compute_F_mult(moved_scaled_x1, moved_scaled_x2)
+    F_mat = [F1, F2]
+
+    # create a dummy determinant matrix
+    D_temp = np.zeros(shape=(3,3))
+
+    # create the actual determinant matrix
+    D = np.zeros(shape=(2,2,2))
+
+    for i in range(0,2):
+        for j in range(0,2):
+            for k in range(0,2):
+                D_temp[:,0] = F_mat[i][:,0]
+                D_temp[:,1] = F_mat[j][:,0]
+                D_temp[:,2] = F_mat[k][:,0]
+                D[i,j,k] = np.linalg.det(D_temp)
+    
+    # create an empty numpy array of size 4 to hold the coeffs
+    coeffs = np.zeros(4)
+
+    coeffs[0] = -D[1,0,0] + D[0,1,1] + D[0,0,0] + D[1,1,0] \
+                + D[1,0,1] - D[0,1,0] - D[0,0,1] - D[1,1,1]
+    coeffs[1] = D[0,0,1] - 2*D[0,1,1] - 2*D[1,0,1] + D[1,0,0] \
+                 - 2*D[1,1,0] + D[0,1,0] + 3*D[1,1,1]
+    coeffs[2] = D[1,1,0] + D[0,1,1] + D[1,0,1] - 3*D[1,1,1]
+    coeffs[3] = D[1,1,1]
+
+    
+
     return Farray
 
+"""
+Dtmp.col(0) = Fmat[i1].col(0);
+Dtmp.col(1) = Fmat[i2].col(1);
+Dtmp.col(2) = Fmat[i3].col(2);
+D[i1][i2][i3] = Dtmp.determinant();
 
+Vec coefficients(4);
+coefficients(0) = -D[1][0][0]+D[0][1][1]+D[0][0][0]+D[1][1][0]+D[1][0][1]-D[0][1][0]-D[0][0][1]-D[1][1][1];
+coefficients(1) = D[0][0][1]-2*D[0][1][1]-2*D[1][0][1]+D[1][0][0]-2*D[1][1][0]+D[0][1][0]+3*D[1][1][1];
+coefficients(2) = D[1][1][0]+D[0][1][1]+D[1][0][1]-3*D[1][1][1];
+coefficients(3) = D[1][1][1];
+"""
+
+
+def compute_F_mult(x1, x2):
+    """
+    Computes the fundamental based on 
+    matching points in both images
+
+    Args:
+        x1: keypoints in image 1
+        x2: keypoints in image 2
+
+    Returns:
+        H2to1: the fundamental matrix
+    """
+
+    # Define a dummy H matrix
+    A_build = []
+    
+    # Define the A matrix for (Ah = 0) (A matrix size = N*2 x 9)
+    for i in range(x1.shape[0]):
+        row_1 = np.array([ x2[i,0]*x1[i,0], x2[i,0]*x1[i,1], x2[i,0], x2[i,1]*x1[i,0], x2[i,1]*x1[i,1], x2[i,1], x1[i,0], x1[i,1], 1])
+        A_build.append(row_1)
+    
+    A = np.stack(A_build, axis=0)
+
+    # Do the least squares minimization to get the homography matrix
+    # this is done as eigenvector coresponding to smallest eigen value of A`A = H matrix
+    u, s, v = np.linalg.svd(A)
+
+    # here the linalg.svd gives v_transpose
+    # but we need just V therefore we again transpose
+    F1 = np.reshape(v.T[:,-1], (3,3))
+    F2 = np.reshape(v.T[:,-2], (3,3))
+
+    return F1, F2
 
 if __name__ == "__main__":
         
