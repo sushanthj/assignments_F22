@@ -1,7 +1,10 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
+import numpy.polynomial.polynomial as poly
 
-from helper import displayEpipolarF, calc_epi_error, toHomogenous, _singularize
+from helper import displayEpipolarF, calc_epi_error, toHomogenous, _singularize, refineF
+from q2_1_eightpoint import check_and_create_directory
 
 # Insert your package here
 
@@ -33,6 +36,8 @@ def sevenpoint(pts1, pts2, M):
     moved_scaled_x2 = x2/M
     t = np.diag([1/M, 1/M, 1])
     F1, F2 = compute_F_mult(moved_scaled_x1, moved_scaled_x2)
+    print("F1 is", F1)
+    print("F2 is", F2)
     F_mat = [F1, F2]
 
     # create a dummy determinant matrix
@@ -59,7 +64,23 @@ def sevenpoint(pts1, pts2, M):
     coeffs[2] = D[1,1,0] + D[0,1,1] + D[1,0,1] - 3*D[1,1,1]
     coeffs[3] = D[1,1,1]
 
+    roots = poly.polyroots(coeffs)
+    complex_root_locs = np.invert(np.iscomplex(roots))
+    roots_pruned = roots[complex_root_locs]
     
+    for m in range(roots_pruned.shape[0]):
+        a = roots_pruned[m]
+        F_tmp = a*F1 + ((1-a)*F2)
+
+        # F_tmp = refineF(F_tmp, moved_scaled_x1, moved_scaled_x2)
+        F_tmp = _singularize(F_tmp)
+
+        F_tmp = np.matmul(t.T, (F_tmp @ t))
+        F_tmp = F_tmp/F_tmp[2,2]
+
+        print("rank is", np.linalg.matrix_rank(F_tmp))
+
+        Farray.append(F_tmp)
 
     return Farray
 
@@ -132,7 +153,15 @@ if __name__ == "__main__":
 
     F = Farray[0]
 
-    np.savez('q2_2.npz', F, M, pts1, pts2)
+    out_dir = "/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_4/code/outputs"
+    check_and_create_directory(out_dir, create=1)
+    np.savez_compressed(
+                        os.path.join(out_dir, 'q2_2.npz'),
+                        F,
+                        M,
+                        pts1,
+                        pts2
+                        )
 
     # fundamental matrix must have rank 2!
     # assert(np.linalg.matrix_rank(F) == 2)
@@ -156,6 +185,7 @@ if __name__ == "__main__":
         choice = np.random.choice(range(pts1.shape[0]), 7)
         pts1_choice = pts1[choice, :]
         pts2_choice = pts2[choice, :]
+        # Fs is the Farray
         Fs = sevenpoint(pts1_choice, pts2_choice, M)
         for F in Fs:
             choices.append(choice)

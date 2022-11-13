@@ -122,15 +122,16 @@ if __name__ == "__main__":
     print("the fundamental matrix found was \n", F)
 
     # Q2.1
-    displayEpipolarF(im1, im2, F)
     out_dir = "/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_4/code/outputs"
-    check_and_create_directory(out_dir, 1)
+    check_and_create_directory(out_dir, create=1)
     np.savez_compressed(
                         os.path.join(out_dir, 'q2_1.npz'),
-                        F=F,
-                        scale=np.max([*im1.shape, *im2.shape])
+                        F,
+                        np.max([*im1.shape, *im2.shape])
                         )
 
+    displayEpipolarF(im1, im2, F)
+    check_and_create_directory(out_dir, 1)
 
     # Simple Tests to verify your implementation:
     pts1_homogenous, pts2_homogenous = toHomogenous(pts1), toHomogenous(pts2)
