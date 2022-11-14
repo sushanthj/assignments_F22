@@ -1,13 +1,16 @@
+import os
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 
 from helper import _epipoles
 
-from q2_1_eightpoint import eightpoint
+from q2_1_eightpoint import eightpoint, check_and_create_directory
 
 # Insert your package here
 WINDOW_SIZE = 13
+PTS_1 = []
+PTS_2 = []
 
 # Helper functions for this assignment. DO NOT MODIFY!!!
 def epipolarMatchGUI(I1, I2, F):
@@ -27,7 +30,7 @@ def epipolarMatchGUI(I1, I2, F):
         plt.sca(ax1)
         # x, y = plt.ginput(1, mouse_stop=2)[0]
 
-        out = plt.ginput(1, timeout=3600, mouse_stop=2)
+        out = plt.ginput(1, timeout=10, mouse_stop=2)
 
         if len(out) == 0:
             print(f"Closing GUI")
@@ -137,6 +140,10 @@ def epipolarCorrespondence(im1, im2, F, x1, y1):
     print("x1 and y1 is", x1, y1)
     print("x2 and y2 are", x2, y2)
 
+    # save these to accumulator array
+    PTS_1.append(np.array([x1, y1]))
+    PTS_2.append(np.array([x2, y2]))
+
     return x2, y2
 
 
@@ -158,13 +165,11 @@ def find_correspondences_vertical(im1, im2, x1, y1, l):
     
     # run along y axis of image and find the best matching point
     sy, sx, _ = im2.shape
-    print("image2 shape is", im2.shape)
 
     # create a window of pixels about the keypoint for correspondence matching
     plain_window_im1 = im1[ 
                             (y1 - math.floor(WINDOW_SIZE/2)) : (y1 + math.floor(WINDOW_SIZE/2) + 1),
                             (x1 - math.floor(WINDOW_SIZE/2)) : (x1 + math.floor(WINDOW_SIZE/2) + 1), :]
-    print("plain window shape is", plain_window_im1.shape)
     
     gauss_window = create_gaussian_window(WINDOW_SIZE)
 
@@ -210,13 +215,11 @@ def find_correspondences_horizontal(im1, im2, x1, y1, l):
     """
     # run along y axis of image and find the best matching point
     sy, sx, _ = im2.shape
-    print("image2 shape is", im2.shape)
 
     # create a window of pixels about the keypoint for correspondence matching
     plain_window_im1 = im1[ 
                             (y1 - math.floor(WINDOW_SIZE/2)) : (y1 + math.floor(WINDOW_SIZE/2) + 1),
                             (x1 - math.floor(WINDOW_SIZE/2)) : (x1 + math.floor(WINDOW_SIZE/2) + 1), :]
-    print("plain window shape is", plain_window_im1.shape)
     
     gauss_window = create_gaussian_window(WINDOW_SIZE)
 
@@ -282,6 +285,18 @@ if __name__ == "__main__":
     
     F = eightpoint(pts1, pts2, M=np.max([*im1.shape, *im2.shape]))
     epipolarMatchGUI(im1, im2, F)
+
+    pts1 = np.stack(PTS_1, axis=0)
+    pts2 = np.stack(PTS_2, axis=0)
+    
+    out_dir = "/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_4/code/outputs"
+    check_and_create_directory(out_dir, create=1)
+    np.savez_compressed(
+                        os.path.join(out_dir, 'q4_1.npz'),
+                        F,
+                        PTS_1,
+                        PTS_2
+                        )
     
     
     # Simple Tests to verify your implementation:

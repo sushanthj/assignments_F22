@@ -89,7 +89,7 @@ def computeF(x1, x2):
     # here the linalg.svd gives v_transpose
     # but we need just V therefore we again transpose
     F2to1 = np.reshape(v.T[:,-1], (3,3))
-    return F2to1.T
+    return F2to1
 
 
 def check_and_create_directory(dir_path, create):

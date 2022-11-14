@@ -1,9 +1,10 @@
+import os
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 
 from helper import camera2
-from q2_1_eightpoint import eightpoint
+from q2_1_eightpoint import eightpoint, check_and_create_directory
 from q3_1_essential_matrix import essentialMatrix
 
 # Insert your package here
@@ -176,6 +177,15 @@ if __name__ == "__main__":
     F = eightpoint(pts1, pts2, M=np.max([*im1.shape, *im2.shape]))
 
     M2, C2, P = findM2(F, pts1, pts2, intrinsics)
+    print("saving references to disk")
+    out_dir = "/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_4/code/outputs"
+    check_and_create_directory(out_dir, create=1)
+    np.savez_compressed(
+                        os.path.join(out_dir, 'q3_3.npz'),
+                        M2,
+                        C2,
+                        P
+                        )
 
     # Tests
     # Simple Tests to verify your implementation:
