@@ -17,7 +17,7 @@ Q3.1: Compute the essential matrix E.
 '''
 def essentialMatrix(F, K1, K2):
     E = K2.T @ (F @ K1)
-    # E = E/E[2,2]
+    E = E/E[2,2]
     print("rank of E is", np.linalg.matrix_rank(E))
     return E
 

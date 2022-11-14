@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -6,7 +7,7 @@ from helper import _epipoles
 from q2_1_eightpoint import eightpoint
 
 # Insert your package here
-
+WINDOW_SIZE = 3
 
 # Helper functions for this assignment. DO NOT MODIFY!!!
 def epipolarMatchGUI(I1, I2, F):
@@ -84,10 +85,147 @@ Q4.1: 3D visualization of the temple images.
 
 '''
 def epipolarCorrespondence(im1, im2, F, x1, y1):
-    # Replace pass by your implementation
+    """
+    Find the epipolar correspondeces depending 
+    Args:
+        im1 : input image
+        im2 : output image
+        F   : Fundamental Matrix
+        x1  : x_coords of keypoints found in im1
+        y1  : y_coords of keypoints found in im1
+    
+    Returns:
+        x2  : calculated correspondence point in im2
+        y2  : calculated correspondence point in im2
+    """
+    
+    # for a given x,y location in image 1, find the resulting line in second image
+    sy, sx, _ = im2.shape
+
+    # convert input point into homogenous coords
+    v = np.array([x1, y1, 1])
+
+    # transform the input point with fundamental matrix to get a line in output image
+    l = F.dot(v)
+
+    # this is norm of output line
+    s = np.sqrt(l[0]**2+l[1]**2)
+
+    # if norm is zero then vector is not scaled
+    if s==0:
+        print('Zero line vector in displayEpipolar')
+
+    # distance of point from line formula
+    l = l/s
+    print("line is", l)
+
+    # case when epipolar lines are running vertically through the image
+    if l[0] != 0:
+        # vary y and get corresp x values
+        # ax + by + c = 0 (l = [a,b,c])
+        # here we follow the eq: x = -(by +c)/a for multiple values of y
+        x2, y2 = find_correspondences_vertical(im1, im2, x1, x2, l)
+
+    # case when epipolar lines are running horizontally through image
+    else:
+        # vary x and get corresp y values
+        # ax + by + c = 0 (l = [a,b,c])
+        # here we follow the eq: y = -(ax + c)/a for multiple values of y
+        x2, y2 = find_correspondences_horizontal(im1, im2, x1, x2, l)
+    
+    print("x1 and y1 is", x1, y1)
+    print("x2 and y2 are", x2, y2)
+
+    return x2, y2
+
+
+def find_correspondences_vertical(im1, im2, x1, y1, l):
+    """
+    Vary the y value in eq. ax+by+c = 0 and get respective x value
+    
+    Args:
+        im1 : image 1
+        im2 : image 2
+        x1  : keypoints in image 1 (given by user)
+        y1  : keypoints in image 1 (given by user)
+        l   : coefficients of line given by transforming x1,y1 with Fundamental matrix (F)
+
+    Returns:
+        x2  : calculated correspondence point in im2
+        y2  : calculated correspondence point in im2
+    """
+    
+    # run along y axis of image and find the best matching point
+    sy, sx, _ = im2.shape
+
+    # create a window of pixels about the keypoint for correspondence matching
+    plain_window_im1 = im1[ 
+                            (y2 - math.floor(WINDOW_SIZE/2)) : (y2 + math.floor(WINDOW_SIZE/2)),
+                            (x2 - math.floor(WINDOW_SIZE/2)) : (x2 + math.floor(WINDOW_SIZE/2)),
+                            :
+                            ]
+    
+    gauss_window = create_gaussian_window(WINDOW_SIZE)
+
+    intensity_error_min = 10000
+    bestx2, besty2 = 0
+    
+    for y2 in range(0+WINDOW_SIZE,sy):
+        # find the corresponding x at this y location
+        x2 = -(l[1] * y2 + l[2])/l[0]
+
+        # find window (eg. 3x3x3) around that pixel of y2 and x2
+        plain_window_im2 = im2[ 
+                            (y2 - math.floor(WINDOW_SIZE/2)) : (y2 + math.floor(WINDOW_SIZE/2)),
+                            (x2 - math.floor(WINDOW_SIZE/2)) : (x2 + math.floor(WINDOW_SIZE/2)),
+                            :
+                            ]
+        
+        # find the difference between this window in im2 and it's respective window in im1
+        diff_window = plain_window_im2 - plain_window_im1
+        # weight the diff window according to our gaussian weights
+        
+
+
+
+def find_correspondences_horizontal(im1, im2, x1, y1, l):
+    """
+    Vary the x value in eq. ax+by+c = 0 and get respective y value
+    
+    Args:
+        im1 : image 1
+        im2 : image 2
+        x1  : keypoints in image 1 (given by user)
+        y1  : keypoints in image 1 (given by user)
+        l   : coefficients of line given by transforming x1,y1 with Fundamental matrix (F)
+    
+    Returns:
+        x2  : calculated correspondence point in im2
+        y2  : calculated correspondence point in im2
+    """
     pass
 
+def create_gaussian_window(w_size):
+    """
+    Create a Gaussian Kernel which will be used to weight the window differently
+    Args:
+        w_size : window size (odd numbers above 3 only)
+    Returns:
+        gauss  : gaussian kernel of given window size
+    """
+    x, y = np.meshgrid(np.linspace(-1,1,w_size), np.linspace(-1,1,w_size))
+    print(x)
+    print(y)
+    dst = np.sqrt(x*x+y*y)
 
+    #Intializing sigma and muu (muu = mean at zero as normal dist)
+    sigma = 1
+    muu = 0.000
+    
+    #Calculating Gaussian array
+    gauss = np.exp(-( (dst-muu)**2 / ( 2.0 * sigma**2 ) ) )
+    
+    return gauss
 
 if __name__ == "__main__":
 
@@ -103,6 +241,7 @@ if __name__ == "__main__":
     # YOUR CODE HERE
     
     F = eightpoint(pts1, pts2, M=np.max([*im1.shape, *im2.shape]))
+    epipolarMatchGUI(im1, im2, F)
     
     
     # Simple Tests to verify your implementation:

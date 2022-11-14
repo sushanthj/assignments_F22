@@ -91,9 +91,9 @@ def triangulate(C1, pts1, C2, pts2):
         # print("diff vals are", pt_1 - pts1[i,:])
         # print("norm squared is is", np.linalg.norm(pt_1 - pts1[i,:])*np.linalg.norm(pt_1 - pts1[i,:]))
 
-        err += (np.linalg.norm(pt_1 - pts1[i,:])*np.linalg.norm(pt_1 - pts1[i,:]) \
-                + np.linalg.norm(pt_2 - pts2[i,:])*np.linalg.norm(pt_2 - pts2[i,:]))
+        err += np.linalg.norm(pt_1 - pts1[i,:])**2 + np.linalg.norm(pt_2 - pts2[i,:])**2
 
+    print("error in this iteration is", err)
     P = P[1:,:]
     return P, err
 
@@ -149,6 +149,7 @@ def findM2(F, pts1, pts2, intrinsics, filename = 'q3_3.npz'):
         # build the C1 and C2:
         pts_in_3d, err = triangulate(K1 @ M1, pts1, K2 @ M2_current, pts2)    
         if err < err_min and (np.where(pts_in_3d[:,2] == 0)[0].shape[0] == 0):
+            print("satisfies the error criteria")
             err_min = err
             best_M2_i = i
             best_pts_3d = pts_in_3d

@@ -118,25 +118,41 @@ def displayEpipolarF(I1, I2, F):
 
         xc = x
         yc = y
+
+        # convert input point into homogenous coords
         v = np.array([xc, yc, 1])
+
+        # transform the input point with fundamental matrix to get a line in output image
         l = F.dot(v)
+
+        # this is norm of output line
         s = np.sqrt(l[0]**2+l[1]**2)
 
+        # if norm is zero then vector is not scaled
         if s==0:
             print('Zero line vector in displayEpipolar')
 
+        # distance of point from line formula
         l = l/s
+        print("line is", l)
 
+        # case when epipolar lines are running vertically through the image
         if l[0] != 0:
             ye = sy-1
             ys = 0
+            # ax + by + c = 0 (l = [a,b,c])
+            # here x = -(by +c)/a
             xe = -(l[1] * ye + l[2])/l[0]
             xs = -(l[1] * ys + l[2])/l[0]
+        # case when epipolar lines are running horizontally through image
         else:
             xe = sx-1
             xs = 0
             ye = -(l[0] * xe + l[2])/l[1]
             ys = -(l[0] * xs + l[2])/l[1]
+        
+        print("xs,xe is", [xs,xe])
+        print("ys and ye are", [ys, ye])
 
         # plt.plot(x,y, '*', 'MarkerSize', 6, 'LineWidth', 2);
         ax1.plot(x, y, '*', markersize=6, linewidth=2)
