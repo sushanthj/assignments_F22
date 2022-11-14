@@ -38,7 +38,7 @@ def compute3D_pts(temple_pts1, intrinsics, F, im1, im2):
     for i in range(temple_pts1.shape[0]):
         pts1 = temple_pts1[i,:]
         x1, y1 = pts1[0], pts1[1]
-        print("pts1 for this iteration is", x1,y1)
+        # print("pts1 for this iteration is", x1,y1)
 
         # use the epipolar corresp. to find the pts2
         x2, y2 = epipolarCorrespondence(im1, im2, F, x1, y1)
@@ -63,9 +63,9 @@ def display_3d(P):
     
     # Creating plot
     for i in range(P.shape[0]):
-        print("the xyz coords are", P[i,:])
+        # print("the xyz coords are", P[i,:])
         x,y,z = P[i,0], P[i,1], P[i,2]
-        ax.scatter(x, y, z, color = "green")
+        ax.scatter3D(x, y, z, color = "blue")
     
     plt.title("temple 3D point plot")
     ax.set_xlabel('X Label')
@@ -92,6 +92,7 @@ if __name__ == "__main__":
 
     # Find F using point correspondences
     F = eightpoint(pts1, pts2, M=np.max([*im1.shape, *im2.shape]))
+    print("F is", F)
 
     # Assuming we don't have the corresponding points in im2, use epipolarcorrespondences to
     # calculate the respective pts2

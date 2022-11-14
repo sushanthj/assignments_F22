@@ -67,16 +67,20 @@ def triangulate(C1, pts1, C2, pts2):
         x2, y2 = pts2[i,0], pts2[i,1]
 
         # calculate the A matrix for this point correspondence
-        A = np.array([y*p3_1 - p2_1, p1_1 - x*p3_1, y2*p3_2 - p2_2, p1_2 - x2*p3_2])
+        A = np.array([y*p3_1 - p2_1 , p1_1 - x*p3_1 , y2*p3_2 - p2_2 , p1_2 - x2*p3_2])
         u, s, v = np.linalg.svd(A)
 
         # here the linalg.svd gives v_transpose
         # but we need just V therefore we again transpose
         X = v.T[:,-1]
+        # print("X is", X)
+        X = X.T
+        X = np.expand_dims(X,axis=0)
+        # print("X after transpose and expand is", X)
         
-        # conver X to homogenous coords
-        X = np.reshape(X, newshape=(1,4))
+        # convert X to homogenous coords
         X = X/X[0,3]
+        # print("X after normalizing is", X)
 
         P = np.concatenate((P, X[:,0:3]), axis=0)
         
@@ -148,8 +152,9 @@ def findM2(F, pts1, pts2, intrinsics, filename = 'q3_3.npz'):
         M2_current = M2[:,:,i]
 
         # build the C1 and C2:
-        pts_in_3d, err = triangulate(K1 @ M1, pts1, K2 @ M2_current, pts2)    
-        if err < err_min and (np.where(pts_in_3d[:,2] == 0)[0].shape[0] == 0):
+        pts_in_3d, err = triangulate((K1 @ M1), pts1, (K2 @ M2_current), pts2)    
+        print(np.where(pts_in_3d[:,2] < 0))
+        if err < err_min and (np.where(pts_in_3d[:,2] < 0)[0].shape[0] == 0):
             print("satisfies the error criteria")
             err_min = err
             best_M2_i = i
@@ -157,7 +162,8 @@ def findM2(F, pts1, pts2, intrinsics, filename = 'q3_3.npz'):
 
     if (best_M2_i is not None) and (best_pts_3d is not None):
         print("min err is", err_min)
-        return M2[:,:,i], K2 @ M2[:,:,i], best_pts_3d, M1, K1 @ M1 # last entry is C1
+        # print("3D points are", best_pts_3d)
+        return M2[:,:,best_M2_i], (K2 @ M2[:,:,best_M2_i]), best_pts_3d, M1, (K1 @ M1) # last entry is C1
     else:
         print("could not converge to best M2")
         return 0,0,0

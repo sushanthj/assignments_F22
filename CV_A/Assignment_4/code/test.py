@@ -1,12 +1,15 @@
 import math
 import numpy as np
 
-a = np.array([[1,2],[3,4]])
+a = np.ones(shape=(3,3,3))
 
-b = np.where(a[:,1] == 0)
+gauss_window = np.zeros(shape=(3,3))
 
-# print(b[0].shape[0])
-WINDOW_SIZE = 1.5
+gauss_window[1,1] = 1
+print(gauss_window)
 
-print(math.floor(WINDOW_SIZE))
-print(math.ceil(WINDOW_SIZE))
+gauss_window = np.stack((gauss_window, gauss_window, gauss_window), axis=2)
+
+print(gauss_window[:,:,0])
+
+print((a*gauss_window)[:,:,0])

@@ -120,7 +120,7 @@ def epipolarCorrespondence(im1, im2, F, x1, y1):
 
     # distance of point from line formula
     l = l/s
-    print("line is", l)
+    # print("line is", l)
 
     # case when epipolar lines are running vertically through the image
     if l[0] != 0:
@@ -137,8 +137,8 @@ def epipolarCorrespondence(im1, im2, F, x1, y1):
         # here we follow the eq: y = -(ax + c)/a for multiple values of y
         x2, y2 = find_correspondences_horizontal(im1, im2, x1, y1, l)
     
-    print("x1 and y1 is", x1, y1)
-    print("x2 and y2 are", x2, y2)
+    # print("x1 and y1 is", x1, y1)
+    # print("x2 and y2 are", x2, y2)
 
     # save these to accumulator array
     PTS_1.append(np.array([x1, y1]))
@@ -176,7 +176,9 @@ def find_correspondences_vertical(im1, im2, x1, y1, l):
     intensity_error_min = 10000
     bestx2, besty2 = 0, 0
     
-    for y2 in range(0+WINDOW_SIZE, sy-WINDOW_SIZE):
+    # for y2 in range(0+WINDOW_SIZE, sy-WINDOW_SIZE):
+    for y2 in range(y1-50, y1+50):
+        
         # find the corresponding x at this y location
         x2 = int(-(l[1] * y2 + l[2])/l[0])
 
@@ -190,6 +192,7 @@ def find_correspondences_vertical(im1, im2, x1, y1, l):
         diff_window_weighted = diff_window*gauss_window
 
         error = np.linalg.norm(diff_window_weighted)
+        # error = np.linalg.norm(diff_window)
         if error < intensity_error_min:
             bestx2 = x2
             besty2 = y2
