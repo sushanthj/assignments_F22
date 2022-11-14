@@ -134,7 +134,6 @@ def displayEpipolarF(I1, I2, F):
 
         # distance of point from line formula
         l = l/s
-        print("line is", l)
 
         # case when epipolar lines are running vertically through the image
         if l[0] != 0:
@@ -150,9 +149,6 @@ def displayEpipolarF(I1, I2, F):
             xs = 0
             ye = -(l[0] * xe + l[2])/l[1]
             ys = -(l[0] * xs + l[2])/l[1]
-        
-        print("xs,xe is", [xs,xe])
-        print("ys and ye are", [ys, ye])
 
         # plt.plot(x,y, '*', 'MarkerSize', 6, 'LineWidth', 2);
         ax1.plot(x, y, '*', markersize=6, linewidth=2)

@@ -7,7 +7,7 @@ from helper import _epipoles
 from q2_1_eightpoint import eightpoint
 
 # Insert your package here
-WINDOW_SIZE = 3
+WINDOW_SIZE = 13
 
 # Helper functions for this assignment. DO NOT MODIFY!!!
 def epipolarMatchGUI(I1, I2, F):
@@ -124,14 +124,15 @@ def epipolarCorrespondence(im1, im2, F, x1, y1):
         # vary y and get corresp x values
         # ax + by + c = 0 (l = [a,b,c])
         # here we follow the eq: x = -(by +c)/a for multiple values of y
-        x2, y2 = find_correspondences_vertical(im1, im2, x1, x2, l)
+        x2, y2 = find_correspondences_vertical(im1, im2, x1, y1, l)
 
     # case when epipolar lines are running horizontally through image
     else:
+        print("ENTERING HORIZONTAL CASE")
         # vary x and get corresp y values
         # ax + by + c = 0 (l = [a,b,c])
         # here we follow the eq: y = -(ax + c)/a for multiple values of y
-        x2, y2 = find_correspondences_horizontal(im1, im2, x1, x2, l)
+        x2, y2 = find_correspondences_horizontal(im1, im2, x1, y1, l)
     
     print("x1 and y1 is", x1, y1)
     print("x2 and y2 are", x2, y2)
@@ -157,35 +158,39 @@ def find_correspondences_vertical(im1, im2, x1, y1, l):
     
     # run along y axis of image and find the best matching point
     sy, sx, _ = im2.shape
+    print("image2 shape is", im2.shape)
 
     # create a window of pixels about the keypoint for correspondence matching
     plain_window_im1 = im1[ 
-                            (y2 - math.floor(WINDOW_SIZE/2)) : (y2 + math.floor(WINDOW_SIZE/2)),
-                            (x2 - math.floor(WINDOW_SIZE/2)) : (x2 + math.floor(WINDOW_SIZE/2)),
-                            :
-                            ]
+                            (y1 - math.floor(WINDOW_SIZE/2)) : (y1 + math.floor(WINDOW_SIZE/2) + 1),
+                            (x1 - math.floor(WINDOW_SIZE/2)) : (x1 + math.floor(WINDOW_SIZE/2) + 1), :]
+    print("plain window shape is", plain_window_im1.shape)
     
     gauss_window = create_gaussian_window(WINDOW_SIZE)
 
     intensity_error_min = 10000
-    bestx2, besty2 = 0
+    bestx2, besty2 = 0, 0
     
-    for y2 in range(0+WINDOW_SIZE,sy):
+    for y2 in range(0+WINDOW_SIZE, sy-WINDOW_SIZE):
         # find the corresponding x at this y location
-        x2 = -(l[1] * y2 + l[2])/l[0]
+        x2 = int(-(l[1] * y2 + l[2])/l[0])
 
         # find window (eg. 3x3x3) around that pixel of y2 and x2
-        plain_window_im2 = im2[ 
-                            (y2 - math.floor(WINDOW_SIZE/2)) : (y2 + math.floor(WINDOW_SIZE/2)),
-                            (x2 - math.floor(WINDOW_SIZE/2)) : (x2 + math.floor(WINDOW_SIZE/2)),
-                            :
-                            ]
+        plain_window_im2 = im2[ (y2 - math.floor(WINDOW_SIZE/2)) : (y2 + math.floor(WINDOW_SIZE/2) + 1), 
+                                (x2 - math.floor(WINDOW_SIZE/2)) : (x2 + math.floor(WINDOW_SIZE/2) + 1), :]
         
         # find the difference between this window in im2 and it's respective window in im1
         diff_window = plain_window_im2 - plain_window_im1
-        # weight the diff window according to our gaussian weights
-        
+        #! weight the diff window according to our gaussian weights (need to verify if a simple broadcase works here)
+        diff_window_weighted = diff_window*gauss_window
 
+        error = np.linalg.norm(diff_window_weighted)
+        if error < intensity_error_min:
+            bestx2 = x2
+            besty2 = y2
+            intensity_error_min = error
+    
+    return bestx2, besty2
 
 
 def find_correspondences_horizontal(im1, im2, x1, y1, l):
@@ -203,7 +208,41 @@ def find_correspondences_horizontal(im1, im2, x1, y1, l):
         x2  : calculated correspondence point in im2
         y2  : calculated correspondence point in im2
     """
-    pass
+    # run along y axis of image and find the best matching point
+    sy, sx, _ = im2.shape
+    print("image2 shape is", im2.shape)
+
+    # create a window of pixels about the keypoint for correspondence matching
+    plain_window_im1 = im1[ 
+                            (y1 - math.floor(WINDOW_SIZE/2)) : (y1 + math.floor(WINDOW_SIZE/2) + 1),
+                            (x1 - math.floor(WINDOW_SIZE/2)) : (x1 + math.floor(WINDOW_SIZE/2) + 1), :]
+    print("plain window shape is", plain_window_im1.shape)
+    
+    gauss_window = create_gaussian_window(WINDOW_SIZE)
+
+    intensity_error_min = 10000
+    bestx2, besty2 = 0, 0
+    
+    for x2 in range(0+WINDOW_SIZE, sx-WINDOW_SIZE):
+        # find the corresponding x at this y location
+        y2 = int(-(l[0] * x2 + l[2])/l[1])
+
+        # find window (eg. 3x3x3) around that pixel of y2 and x2
+        plain_window_im2 = im2[ (y2 - math.floor(WINDOW_SIZE/2)) : (y2 + math.floor(WINDOW_SIZE/2) + 1), 
+                                (x2 - math.floor(WINDOW_SIZE/2)) : (x2 + math.floor(WINDOW_SIZE/2) + 1), :]
+        
+        # find the difference between this window in im2 and it's respective window in im1
+        diff_window = plain_window_im2 - plain_window_im1
+        #! weight the diff window according to our gaussian weights (need to verify if a simple broadcase works here)
+        diff_window_weighted = diff_window*gauss_window
+
+        error = np.linalg.norm(diff_window_weighted)
+        if error < intensity_error_min:
+            bestx2 = x2
+            besty2 = y2
+            intensity_error_min = error
+    
+    return bestx2, besty2
 
 def create_gaussian_window(w_size):
     """
@@ -214,18 +253,19 @@ def create_gaussian_window(w_size):
         gauss  : gaussian kernel of given window size
     """
     x, y = np.meshgrid(np.linspace(-1,1,w_size), np.linspace(-1,1,w_size))
-    print(x)
-    print(y)
     dst = np.sqrt(x*x+y*y)
 
     #Intializing sigma and muu (muu = mean at zero as normal dist)
     sigma = 1
     muu = 0.000
     
-    #Calculating Gaussian array
+    # Calculating Gaussian array
     gauss = np.exp(-( (dst-muu)**2 / ( 2.0 * sigma**2 ) ) )
+
+    # replicate this gauss to 3D
+    gauss_3d = np.stack((gauss, gauss, gauss), axis=2)
     
-    return gauss
+    return gauss_3d
 
 if __name__ == "__main__":
 
