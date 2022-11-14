@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 
-from helper import displayEpipolarF, calc_epi_error, toHomogenous, refineF
+from helper import displayEpipolarF, calc_epi_error, toHomogenous, refineF, _singularize
 
 # Insert your package here
 '''
@@ -36,7 +36,6 @@ def eightpoint(pts1, pts2, M):
     Returns:
         F2to1: Fundamental matrix after denormalization
     """
-    print("M scale is", M)
     # Compute the centroid of the points
     x1, x2 = pts1, pts2
 
@@ -50,6 +49,7 @@ def eightpoint(pts1, pts2, M):
     F = computeF(moved_scaled_x1, moved_scaled_x2)
 
     # Refine and then enforce singularity constraint
+    F = _singularize(F)
     F = refineF(F, moved_scaled_x1, moved_scaled_x2)
 
     # Denormalization

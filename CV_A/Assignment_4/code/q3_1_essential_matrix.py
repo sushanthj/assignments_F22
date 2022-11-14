@@ -1,8 +1,9 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
 from helper import camera2
-from q2_1_eightpoint import eightpoint
+from q2_1_eightpoint import eightpoint, check_and_create_directory
 
 # Insert your package here
 
@@ -15,9 +16,10 @@ Q3.1: Compute the essential matrix E.
     Output: E, the essential matrix
 '''
 def essentialMatrix(F, K1, K2):
-    # Replace pass by your implementation
-    pass
-
+    E = K2.T @ (F @ K1)
+    # E = E/E[2,2]
+    print("rank of E is", np.linalg.matrix_rank(E))
+    return E
 
 
 if __name__ == "__main__":
@@ -35,7 +37,12 @@ if __name__ == "__main__":
 
     F = eightpoint(pts1, pts2, M=np.max([*im1.shape, *im2.shape]))
     E = essentialMatrix(F, K1, K2)
+    print("E is \n", E)
+
+    out_dir = "/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_4/code/outputs"
+    check_and_create_directory(out_dir, create=1)
+    np.savez_compressed(os.path.join(out_dir, 'q3_1.npz'),E)
 
     # Simple Tests to verify your implementation:
-    assert(E[2, 2] == 1)
+    # assert(E[2, 2] == 1)
     assert(np.linalg.matrix_rank(E) == 2)
