@@ -157,7 +157,7 @@ def findM2(F, pts1, pts2, intrinsics, filename = 'q3_3.npz'):
 
     if (best_M2_i is not None) and (best_pts_3d is not None):
         print("min err is", err_min)
-        return M2[:,:,i], K2 @ M2[:,:,i], best_pts_3d
+        return M2[:,:,i], K2 @ M2[:,:,i], best_pts_3d, M1, K1 @ M1 # last entry is C1
     else:
         print("could not converge to best M2")
         return 0,0,0
@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
     F = eightpoint(pts1, pts2, M=np.max([*im1.shape, *im2.shape]))
 
-    M2, C2, P = findM2(F, pts1, pts2, intrinsics)
+    M2, C2, P, M1, C1 = findM2(F, pts1, pts2, intrinsics)
     print("saving references to disk")
     out_dir = "/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_4/code/outputs"
     check_and_create_directory(out_dir, create=1)
