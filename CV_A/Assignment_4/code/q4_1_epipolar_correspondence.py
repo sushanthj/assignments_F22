@@ -8,7 +8,7 @@ from helper import _epipoles
 from q2_1_eightpoint import eightpoint, check_and_create_directory
 
 # Insert your package here
-WINDOW_SIZE = 5
+WINDOW_SIZE = 13
 PTS_1 = []
 PTS_2 = []
 
@@ -192,7 +192,6 @@ def find_correspondences_vertical(im1, im2, x1, y1, l):
         diff_window_weighted = diff_window*gauss_window
 
         error = np.linalg.norm(diff_window_weighted)
-        # error = np.linalg.norm(diff_window)
         if error < intensity_error_min:
             bestx2 = x2
             besty2 = y2

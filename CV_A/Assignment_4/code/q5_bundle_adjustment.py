@@ -130,8 +130,7 @@ if __name__ == "__main__":
 
     F, inliers = ransacF(noisy_pts1, noisy_pts2, M=np.max([*im1.shape, *im2.shape]))
 
-    # YOUR CODE HERE
-
+    F_naieve = eightpoint(noisy_pts1, noisy_pts2, M=np.max([*im1.shape, *im2.shape]))
 
     # Simple Tests to verify your implementation:
     pts1_homogenous, pts2_homogenous = toHomogenous(noisy_pts1), toHomogenous(noisy_pts2)

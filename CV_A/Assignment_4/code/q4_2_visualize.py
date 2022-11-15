@@ -64,7 +64,7 @@ def display_3d(P):
     
     # # Creating plot
     # for i in range(P.shape[0]):
-    #     # print("the xyz coords are", P[i,:])
+        # print("the xyz coords are", P[i,:])
     #     x,y,z = P[i,0], P[i,1], P[i,2]
     #     ax.scatter3D(x, y, z, color = "blue")
     x_vals = list(P[:,0])
@@ -88,7 +88,7 @@ Q4.2:
 '''
 if __name__ == "__main__":
 
-    temple_coords_path = np.load('data/templeCoords.npz')
+    templeCoords = np.load('data/templeCoords.npz')
     correspondence = np.load('data/some_corresp.npz') # Loading correspondences
     intrinsics = np.load('data/intrinsics.npz') # Loading the intrinscis of the camera
     K1, K2 = intrinsics['K1'], intrinsics['K2']
@@ -103,6 +103,7 @@ if __name__ == "__main__":
     # Assuming we don't have the corresponding points in im2, use epipolarcorrespondences to
     # calculate the respective pts2
     # Having pts1 and pts2 use the triangulate function to find the 3D location of the points
+    pts1 = np.hstack([templeCoords["x1"], templeCoords["y1"]])
     M2, C2, P, M1, C1 = compute3D_pts(pts1, intrinsics, F, im1, im2)
 
     out_dir = "/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_4/code/outputs"

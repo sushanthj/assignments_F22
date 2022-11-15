@@ -142,7 +142,7 @@ def findM2(F, pts1, pts2, intrinsics, filename = 'q3_3.npz'):
 
     # keep track of best M2 index
     best_M2_i = None
-    err_min = 500
+    err_min = 800
     best_pts_3d = None
 
     # we need to figure out which one of them is the right orientation (only 1 is right)
