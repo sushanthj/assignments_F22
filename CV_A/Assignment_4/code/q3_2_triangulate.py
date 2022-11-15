@@ -153,7 +153,6 @@ def findM2(F, pts1, pts2, intrinsics, filename = 'q3_3.npz'):
 
         # build the C1 and C2:
         pts_in_3d, err = triangulate((K1 @ M1), pts1, (K2 @ M2_current), pts2)    
-        print(np.where(pts_in_3d[:,2] < 0))
         if err < err_min and (np.where(pts_in_3d[:,2] < 0)[0].shape[0] == 0):
             print("satisfies the error criteria")
             err_min = err

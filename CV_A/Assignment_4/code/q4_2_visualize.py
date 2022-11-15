@@ -49,6 +49,7 @@ def compute3D_pts(temple_pts1, intrinsics, F, im1, im2):
 
     # having found the correspondences find the correct camera matrix relating the two views
     M2, C2, P, M1, C1 = findM2(F, temple_pts1, temple_pts2, intrinsics)
+    print("shape of P is", P.shape)
     return M2, C2, P, M1, C1
 
 def display_3d(P):
@@ -61,16 +62,21 @@ def display_3d(P):
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     
-    # Creating plot
-    for i in range(P.shape[0]):
-        # print("the xyz coords are", P[i,:])
-        x,y,z = P[i,0], P[i,1], P[i,2]
-        ax.scatter3D(x, y, z, color = "blue")
+    # # Creating plot
+    # for i in range(P.shape[0]):
+    #     # print("the xyz coords are", P[i,:])
+    #     x,y,z = P[i,0], P[i,1], P[i,2]
+    #     ax.scatter3D(x, y, z, color = "blue")
+    x_vals = list(P[:,0])
+    y_vals = list(P[:,1])
+    z_vals = list(P[:,2])
+
+    ax.scatter(x_vals, y_vals, z_vals)
     
     plt.title("temple 3D point plot")
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
+    # ax.set_zlabel('Z Label')
     
     # show plot
     plt.show()

@@ -8,7 +8,7 @@ from helper import _epipoles
 from q2_1_eightpoint import eightpoint, check_and_create_directory
 
 # Insert your package here
-WINDOW_SIZE = 13
+WINDOW_SIZE = 5
 PTS_1 = []
 PTS_2 = []
 

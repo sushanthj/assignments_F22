@@ -36,33 +36,13 @@ def sevenpoint(pts1, pts2, M):
     moved_scaled_x2 = x2/M
     t = np.diag([1/M, 1/M, 1])
     F1, F2 = compute_F_mult(moved_scaled_x1, moved_scaled_x2)
-    print("F1 is", F1)
-    print("F2 is", F2)
+    print("F1 is \n", F1)
+    print("F2 is \n", F2)
     F_mat = [F1, F2]
-
-    # create a dummy determinant matrix
-    D_temp = np.zeros(shape=(3,3))
-
-    # create the actual determinant matrix
-    D = np.zeros(shape=(2,2,2))
-
-    for i in range(0,2):
-        for j in range(0,2):
-            for k in range(0,2):
-                D_temp[:,0] = F_mat[i][:,0]
-                D_temp[:,1] = F_mat[j][:,0]
-                D_temp[:,2] = F_mat[k][:,0]
-                D[i,j,k] = np.linalg.det(D_temp)
     
-    # create an empty numpy array of size 4 to hold the coeffs
-    coeffs = np.zeros(4)
-
-    coeffs[0] = -D[1,0,0] + D[0,1,1] + D[0,0,0] + D[1,1,0] \
-                + D[1,0,1] - D[0,1,0] - D[0,0,1] - D[1,1,1]
-    coeffs[1] = D[0,0,1] - 2*D[0,1,1] - 2*D[1,0,1] + D[1,0,0] \
-                 - 2*D[1,1,0] + D[0,1,0] + 3*D[1,1,1]
-    coeffs[2] = D[1,1,0] + D[0,1,1] + D[1,0,1] - 3*D[1,1,1]
-    coeffs[3] = D[1,1,1]
+    # TODO: FIND THE COEFFS
+    coeffs = 0
+    
 
     roots = poly.polyroots(coeffs)
     complex_root_locs = np.invert(np.iscomplex(roots))
@@ -95,6 +75,30 @@ coefficients(0) = -D[1][0][0]+D[0][1][1]+D[0][0][0]+D[1][1][0]+D[1][0][1]-D[0][1
 coefficients(1) = D[0][0][1]-2*D[0][1][1]-2*D[1][0][1]+D[1][0][0]-2*D[1][1][0]+D[0][1][0]+3*D[1][1][1];
 coefficients(2) = D[1][1][0]+D[0][1][1]+D[1][0][1]-3*D[1][1][1];
 coefficients(3) = D[1][1][1];
+
+# create a dummy determinant matrix
+    D_temp = np.zeros(shape=(3,3))
+
+    # create the actual determinant matrix
+    D = np.zeros(shape=(2,2,2))
+
+    for i in range(0,2):
+        for j in range(0,2):
+            for k in range(0,2):
+                D_temp[:,0] = F_mat[i][:,0]
+                D_temp[:,1] = F_mat[j][:,0]
+                D_temp[:,2] = F_mat[k][:,0]
+                D[i,j,k] = np.linalg.det(D_temp)
+    
+    # create an empty numpy array of size 4 to hold the coeffs
+    coeffs = np.zeros(4)
+
+    coeffs[0] = -D[1,0,0] + D[0,1,1] + D[0,0,0] + D[1,1,0] \
+                + D[1,0,1] - D[0,1,0] - D[0,0,1] - D[1,1,1]
+    coeffs[1] = D[0,0,1] - 2*D[0,1,1] - 2*D[1,0,1] + D[1,0,0] \
+                 - 2*D[1,1,0] + D[0,1,0] + 3*D[1,1,1]
+    coeffs[2] = D[1,1,0] + D[0,1,1] + D[1,0,1] - 3*D[1,1,1]
+    coeffs[3] = D[1,1,1]
 """
 
 
