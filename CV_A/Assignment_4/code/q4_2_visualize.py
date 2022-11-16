@@ -27,7 +27,23 @@ Q4.2: Finding the 3D position of given points based on epipolar correspondence a
     (4) As a reference, our solution's best error is around ~2000 on the 3D points. 
 '''
 def compute3D_pts(temple_pts1, intrinsics, F, im1, im2):
+    """
+    Compute 3D points by:
+    1. Finding correspondeces along epipolar line (using simple intensity patch matching)
+    2. Compute all possible camera matrices (intrinsic*extrinsic) and choose the right one
+       Note. The first camera is assumed to be fixed with zero rotation
+    3. Find the correct camera with right 3D points and return the 3D points
+    Args:
+        temple_pts1 : handpicked keypoints of image1
+        intrinsics  : camera intrinsic matrices for both cameras
+        F           : Known fundamental matrix
+        im1         : image 1
+        im2         : image 2
 
+    Returns:
+        M2, C2, P, M1, C1: extrinsic_matrix of camera 1, cam_matrix of camera 2, 3D points,
+                           extrinsic_matrix of camera 1, cam_matrix of camera 1
+    """
     print("shape of temple_pts1 is", temple_pts1.shape)
     # define a placeholder for all pts2
     pts_im2 = []
@@ -62,11 +78,6 @@ def display_3d(P):
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     
-    # # Creating plot
-    # for i in range(P.shape[0]):
-        # print("the xyz coords are", P[i,:])
-    #     x,y,z = P[i,0], P[i,1], P[i,2]
-    #     ax.scatter3D(x, y, z, color = "blue")
     x_vals = list(P[:,0])
     y_vals = list(P[:,1])
     z_vals = list(P[:,2])
@@ -76,7 +87,7 @@ def display_3d(P):
     plt.title("temple 3D point plot")
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
-    # ax.set_zlabel('Z Label')
+    ax.set_zlabel('Z Label')
     
     # show plot
     plt.show()

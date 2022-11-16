@@ -1,10 +1,13 @@
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 
+from copy import deepcopy
 from helper import displayEpipolarF, calc_epi_error, toHomogenous
 from q2_1_eightpoint import eightpoint
 from q2_2_sevenpoint import sevenpoint
 from q3_2_triangulate import findM2
+from q4_1_epipolar_correspondence import epipolarCorrespondence
 
 import scipy
 
@@ -47,9 +50,132 @@ Q5.1: RANSAC method.
     (4) You can increase the nIters to bigger/smaller values
  
 '''
-def ransacF(pts1, pts2, M, nIters=1000, tol=10):
-    # Replace pass by your implementation
-    pass
+def ransacF(pts1, pts2, M, im1, im2, nIters=1000, tol=10):
+    """
+    Every iteration we init a Homography matrix using 4 corresponding
+    points and calculate number of inliers. Finally use the Homography
+    matrix which had max number of inliers (and these inliers as well)
+    to find the final Homography matrix
+    Args:
+        pts1: location of matched points in image1
+        pts2: location of matched points in image2
+        opts: user inputs used for distance tolerance in ransac
+
+    Returns:
+        bestH2to1     : The homography matrix with max number of inliers
+        final_inliers : Final list of inliers considered for homography
+    """
+    max_iters = nIters # the number of iterations to run RANSAC for
+    inlier_tol = tol # the tolerance value for considering a point to be an inlier
+    locs1 = pts1
+    locs2 = pts2
+
+    # define size of both locs1 and locs2
+    num_rows = locs1.shape[0]
+
+    # define a container for keeping track of inlier counts
+    final_inlier_count = 0
+    final_distance_error = 10000
+
+    #? Create a boolean vector of length N where 1 = inlier and 0 = outlier
+    print("Computing RANSAC")
+    for i in range(max_iters):
+        test_locs1 = deepcopy(locs1)
+        test_locs2 = deepcopy(locs2)
+        # chose a random sample of 4 points to find H
+        rand_index = []
+        
+        rand_index = random.sample(range(int(locs1.shape[0])), k=8)
+        
+        rand_points_1 = []
+        rand_points_2 = []
+        
+        for j in rand_index:
+            rand_points_1.append(locs1[j,:])
+            rand_points_2.append(locs2[j,:])
+        
+        test_locs1 = np.delete(test_locs1, rand_index, axis=0)
+        test_locs2 = np.delete(test_locs2, rand_index, axis=0)
+            
+        correspondence_points_1 = np.vstack(rand_points_1)
+        correspondence_points_2 = np.vstack(rand_points_2)
+
+        ref_F = eightpoint(correspondence_points_1, correspondence_points_2, M)
+        inliers, inlier_count, distance_error, error_state = compute_inliers(ref_F, 
+                                                                            test_locs1,
+                                                                            test_locs2, 
+                                                                            inlier_tol,
+                                                                            im1,
+                                                                            im2)
+
+        if error_state == 1:
+            continue
+
+        if (inlier_count > final_inlier_count) and (distance_error < final_distance_error):
+            final_inlier_count = inlier_count
+            final_inliers = inliers
+            final_corresp_points_1 = correspondence_points_1
+            final_corresp_points_2 = correspondence_points_2
+            final_distance_error = distance_error
+            final_test_locs1 = test_locs1
+            final_test_locs2 = test_locs2
+        
+    if final_distance_error != 10000:
+        # print("original point count is", locs1.shape[0])
+        # print("final inlier count is", final_inlier_count)
+        # print("final inlier's cumulative distance error is", final_distance_error)
+
+        delete_indexes = np.where(final_inliers==0)
+        final_locs_1 = np.delete(final_test_locs1, delete_indexes, axis=0)
+        final_locs_2 = np.delete(final_test_locs2, delete_indexes, axis=0)
+
+        final_locs_1 = np.vstack((final_locs_1, final_corresp_points_1))
+        final_locs_2 = np.vstack((final_locs_2, final_corresp_points_2))
+
+        bestH2to1 = eightpoint(final_locs_1, final_locs_2, M)
+        return bestH2to1, final_inliers
+    
+    else:
+        bestH2to1 = eightpoint(correspondence_points_1, correspondence_points_2, M)
+        return bestH2to1, 0
+    
+
+def compute_inliers(f, x1, x2, tol, im1, im2):
+    """
+    Compute the number of inliers for a given
+    Fundamental matrix
+    Args:
+        h  : Fundamental matrix
+        x1 : matched points in image 1
+        x2 : matched points in image 2
+        tol: tolerance value to check for inliers
+
+    Returns:
+        inliers         : indexes of x1 or x2 which are inliers
+        inlier_count    : number of total inliers
+        dist_error_sum  : Cumulative sum of errors in reprojection error calc
+        flag            : flag to indicate if H was invertible or not
+    """
+    # take H inv to map points in x1 to x2
+    # try:
+    #     F = np.linalg.inv(f)
+    # except:
+    #     return [1,1,1], 1, 1, 1
+
+    x2_est = np.zeros((x2.shape), dtype=x2.dtype)
+
+    for i in range(x1.shape[0]):
+        print("the x and y points are", x1[i,0], x1[i,1])
+        x2_est[i,0], x2_est[i,1] = epipolarCorrespondence(im1, im2, f, x1[i,0], x1[i,1])  #F @ x1_extd[i,:]
+    
+    print("shape of x2 and x2_est is", x2.shape, x2_est.shape)
+    dist_error = np.linalg.norm((x2-x2_est),axis=1)
+    
+    print("dist error is", dist_error)
+    inliers = np.where((dist_error < tol), 1, 0)
+    inlier_count = np.count_nonzero(inliers == 1)
+    
+    return inliers, inlier_count, np.sum(dist_error), 0
 
 
 '''
@@ -128,9 +254,18 @@ if __name__ == "__main__":
     im1 = plt.imread('data/im1.png')
     im2 = plt.imread('data/im2.png')
 
-    F, inliers = ransacF(noisy_pts1, noisy_pts2, M=np.max([*im1.shape, *im2.shape]))
+    templeCoords = np.load('data/templeCoords.npz')
+    temple_pts1 = np.hstack([templeCoords["x1"], templeCoords["y1"]])
 
-    F_naieve = eightpoint(noisy_pts1, noisy_pts2, M=np.max([*im1.shape, *im2.shape]))
+    M = np.max([*im1.shape, *im2.shape])
+
+    F, inliers = ransacF(noisy_pts1, noisy_pts2, M, im1, im2)
+
+    F_naieve = eightpoint(noisy_pts1, noisy_pts2, M)
+
+    # use displayEpipolarF to compare how ransac_F and naieve_F behave
+    displayEpipolarF(im1, im2, F)
+    displayEpipolarF(im1, im2, F_naieve)
 
     # Simple Tests to verify your implementation:
     pts1_homogenous, pts2_homogenous = toHomogenous(noisy_pts1), toHomogenous(noisy_pts2)
@@ -139,7 +274,6 @@ if __name__ == "__main__":
     assert(F[2, 2] == 1)
     assert(np.linalg.matrix_rank(F) == 2)
     
-
     # YOUR CODE HERE
 
 

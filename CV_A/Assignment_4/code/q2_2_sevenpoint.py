@@ -41,10 +41,15 @@ def sevenpoint(pts1, pts2, M):
     F_mat = [F1, F2]
     
     # TODO: FIND THE COEFFS
-    coeffs = 0
-    
+    # create a function to map the polynomial to solve: [det(a*F1 + (1-a)*F2] = [ alpha*(a**3) + beta*(a**2) + gamma(a) + delta ]
+    coeffs = lambda a: np.linalg.det(a*F1 + (a-1)*F2)
 
-    roots = poly.polyroots(coeffs)
+    delta = coeffs(0)
+    beta = (coeffs(1) + coeffs(-1))/2 - coeffs(0)
+    gamma = 2*(coeffs(1) - coeffs(-1))/3 - (coeffs(2) - coeffs(-2))/12
+    alpha = (coeffs(1) + coeffs(-1))/2 - gamma
+
+    roots = np.roots([alpha, beta, gamma, delta])
     complex_root_locs = np.invert(np.iscomplex(roots))
     roots_pruned = roots[complex_root_locs]
     
@@ -54,6 +59,7 @@ def sevenpoint(pts1, pts2, M):
 
         # F_tmp = refineF(F_tmp, moved_scaled_x1, moved_scaled_x2)
         F_tmp = _singularize(F_tmp)
+        F_tmp = refineF(F_tmp, moved_scaled_x1, moved_scaled_x2)
 
         F_tmp = np.matmul(t.T, (F_tmp @ t))
         F_tmp = F_tmp/F_tmp[2,2]
@@ -64,42 +70,6 @@ def sevenpoint(pts1, pts2, M):
 
     return Farray
 
-"""
-Dtmp.col(0) = Fmat[i1].col(0);
-Dtmp.col(1) = Fmat[i2].col(1);
-Dtmp.col(2) = Fmat[i3].col(2);
-D[i1][i2][i3] = Dtmp.determinant();
-
-Vec coefficients(4);
-coefficients(0) = -D[1][0][0]+D[0][1][1]+D[0][0][0]+D[1][1][0]+D[1][0][1]-D[0][1][0]-D[0][0][1]-D[1][1][1];
-coefficients(1) = D[0][0][1]-2*D[0][1][1]-2*D[1][0][1]+D[1][0][0]-2*D[1][1][0]+D[0][1][0]+3*D[1][1][1];
-coefficients(2) = D[1][1][0]+D[0][1][1]+D[1][0][1]-3*D[1][1][1];
-coefficients(3) = D[1][1][1];
-
-# create a dummy determinant matrix
-    D_temp = np.zeros(shape=(3,3))
-
-    # create the actual determinant matrix
-    D = np.zeros(shape=(2,2,2))
-
-    for i in range(0,2):
-        for j in range(0,2):
-            for k in range(0,2):
-                D_temp[:,0] = F_mat[i][:,0]
-                D_temp[:,1] = F_mat[j][:,0]
-                D_temp[:,2] = F_mat[k][:,0]
-                D[i,j,k] = np.linalg.det(D_temp)
-    
-    # create an empty numpy array of size 4 to hold the coeffs
-    coeffs = np.zeros(4)
-
-    coeffs[0] = -D[1,0,0] + D[0,1,1] + D[0,0,0] + D[1,1,0] \
-                + D[1,0,1] - D[0,1,0] - D[0,0,1] - D[1,1,1]
-    coeffs[1] = D[0,0,1] - 2*D[0,1,1] - 2*D[1,0,1] + D[1,0,0] \
-                 - 2*D[1,1,0] + D[0,1,0] + 3*D[1,1,1]
-    coeffs[2] = D[1,1,0] + D[0,1,1] + D[1,0,1] - 3*D[1,1,1]
-    coeffs[3] = D[1,1,1]
-"""
 
 
 def compute_F_mult(x1, x2):
