@@ -63,7 +63,7 @@ def ransacF(pts1, pts2, M, im1, im2, nIters=100, tol=18):
 
     Returns:
         bestH2to1     : The homography matrix with max number of inliers
-        final_inliers : Final list of inliers considered for homography
+        inlier_points : Final list of inliers found for best RANSAC iteration
     """
     max_iters = nIters # the number of iterations to run RANSAC for
     inlier_tol = tol # the tolerance value for considering a point to be an inlier
@@ -133,7 +133,7 @@ def ransacF(pts1, pts2, M, im1, im2, nIters=100, tol=18):
         final_locs_2 = np.vstack((final_locs_2, final_corresp_points_2))
 
         bestH2to1 = eightpoint(final_locs_1, final_locs_2, M)
-        return bestH2to1, final_inliers
+        return bestH2to1, [final_locs_1, final_locs_2]
     
     else:
         print("SOMETHING WRONG")
@@ -157,11 +157,6 @@ def compute_inliers(f, x1, x2, tol, im1, im2):
         dist_error_sum  : Cumulative sum of errors in reprojection error calc
         flag            : flag to indicate if H was invertible or not
     """
-    # take H inv to map points in x1 to x2
-    # try:
-    #     F = np.linalg.inv(f)
-    # except:
-    #     return [1,1,1], 1, 1, 1
 
     pts1_homogenous, pts2_homogenous = toHomogenous(x1), toHomogenous(x2)
     dist_error = calc_epi_error(pts1_homogenous, pts2_homogenous, f)
@@ -181,8 +176,31 @@ Q5.2: Rodrigues formula.
     Output: R, a rotation matrix
 '''
 def rodrigues(r):
-    # Replace pass by your implementation
-    pass
+    """
+    Compute the Rotation matrix from given exponential form
+    Refer: https://courses.cs.duke.edu//fall13/compsci527/notes/rodrigues.pdf
+
+    Args:
+        r : rotation axis
+    
+    Returns:
+        R : rotation matrix
+    """
+    thetha = np.linalg.norm(r)
+    if thetha == 0:
+        R = np.eye(3,3)
+    else:
+        print("shape of u is", u)
+        u = r/thetha
+        u_skew = np.array([[0, -u[2], u[1]], 
+                           [u[2], 0, -u[0]],
+                           [-u[1], u[0], 0]])
+
+        R = np.eye(3,3)*np.cos(thetha) + \
+            (1 - np.cos(thetha))* (u @ u.T) + \
+            u_skew*np.sin(thetha)
+    
+    return R
 
 
 '''
@@ -191,8 +209,29 @@ Q5.2: Inverse Rodrigues formula.
     Output: r, a 3x1 vector
 '''
 def invRodrigues(R):
-    # Replace pass by your implementation
-    pass
+    """
+    Calulate the rotation axis vector given Rotation matrix
+
+    Args:
+        R : rotation matrix
+
+    Returns:
+        r : rotation axis
+    """
+    A = (R - R.T)/2
+    rho = np.array([[A[2,1]],[A[0,2]],[A[1,0]]])
+    s = np.linalg.norm(A)
+    c = (R[0,0] + R[1,1] + R[2,2] - 1)/2
+    
+    if s == 0 and c == 1:
+        r = np.array([0,0,0])
+    
+    else:
+        u = rho/s
+        thetha = np.arctan2(s,c)
+        r = thetha*u
+    
+    return r
 
 
 '''
@@ -257,12 +296,13 @@ if __name__ == "__main__":
     M = np.max([*im1.shape, *im2.shape])
 
     F, inliers = ransacF(noisy_pts1, noisy_pts2, M, im1, im2)
+    inlier_pts1, inlier_pts2 = inliers[0], inliers[1]
 
     F_naieve = eightpoint(noisy_pts1, noisy_pts2, M)
 
     # use displayEpipolarF to compare how ransac_F and naieve_F behave
-    displayEpipolarF(im1, im2, F)
-    displayEpipolarF(im1, im2, F_naieve)
+    # displayEpipolarF(im1, im2, F)
+    # displayEpipolarF(im1, im2, F_naieve)
 
     # Simple Tests to verify your implementation:
     pts1_homogenous, pts2_homogenous = toHomogenous(noisy_pts1), toHomogenous(noisy_pts2)
@@ -271,7 +311,9 @@ if __name__ == "__main__":
     assert(F[2, 2] == 1)
     assert(np.linalg.matrix_rank(F) == 2)
     
-    # YOUR CODE HERE
+    # Assuming the rotation and translation of camera1 is zero
+    M1 = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]])
+    residuals = rodriguesResidual(K1, M1, inlier_pts1, K2, inlier_pts2)
 
 
     # Simple Tests to verify your implementation:
