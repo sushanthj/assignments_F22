@@ -50,7 +50,7 @@ Q5.1: RANSAC method.
     (4) You can increase the nIters to bigger/smaller values
  
 '''
-def ransacF(pts1, pts2, M, im1, im2, nIters=1000, tol=10):
+def ransacF(pts1, pts2, M, im1, im2, nIters=500, tol=2):
     """
     Every iteration we init a Homography matrix using 4 corresponding
     points and calculate number of inliers. Finally use the Homography
@@ -165,15 +165,17 @@ def compute_inliers(f, x1, x2, tol, im1, im2):
     x2_est = np.zeros((x2.shape), dtype=x2.dtype)
 
     for i in range(x1.shape[0]):
-        print("the x and y points are", x1[i,0], x1[i,1])
+        # print("the x and y points are", x1[i,0], x1[i,1])
         x2_est[i,0], x2_est[i,1] = epipolarCorrespondence(im1, im2, f, x1[i,0], x1[i,1])  #F @ x1_extd[i,:]
     
-    print("shape of x2 and x2_est is", x2.shape, x2_est.shape)
+    # print("shape of x2 and x2_est is", x2.shape, x2_est.shape)
+    print("diff shape is", (x2-x2_est).shape)
     dist_error = np.linalg.norm((x2-x2_est),axis=1)
     
-    print("dist error is", dist_error)
+    print("dist error is", dist_error.shape)
     inliers = np.where((dist_error < tol), 1, 0)
     inlier_count = np.count_nonzero(inliers == 1)
+    print("inlier count is", inlier_count)
     
     return inliers, inlier_count, np.sum(dist_error), 0
 

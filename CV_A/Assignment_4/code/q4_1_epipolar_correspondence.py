@@ -187,8 +187,10 @@ def find_correspondences_vertical(im1, im2, x1, y1, l):
                                 (x2 - math.floor(WINDOW_SIZE/2)) : (x2 + math.floor(WINDOW_SIZE/2) + 1), :]
         
         # find the difference between this window in im2 and it's respective window in im1
-        diff_window = plain_window_im2 - plain_window_im1
-        #! weight the diff window according to our gaussian weights (need to verify if a simple broadcase works here)
+        try:
+            diff_window = plain_window_im2 - plain_window_im1
+        except:
+            return x1, y1
         diff_window_weighted = diff_window*gauss_window
 
         error = np.linalg.norm(diff_window_weighted)
@@ -238,7 +240,6 @@ def find_correspondences_horizontal(im1, im2, x1, y1, l):
         
         # find the difference between this window in im2 and it's respective window in im1
         diff_window = plain_window_im2 - plain_window_im1
-        #! weight the diff window according to our gaussian weights (need to verify if a simple broadcase works here)
         diff_window_weighted = diff_window*gauss_window
 
         error = np.linalg.norm(diff_window_weighted)
