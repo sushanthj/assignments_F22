@@ -130,11 +130,12 @@ if __name__ == "__main__":
                         np.max([*im1.shape, *im2.shape])
                         )
 
-    displayEpipolarF(im1, im2, F)
-    check_and_create_directory(out_dir, 1)
+    # displayEpipolarF(im1, im2, F)
 
     # Simple Tests to verify your implementation:
+    print("pts shape is", pts1.shape)
     pts1_homogenous, pts2_homogenous = toHomogenous(pts1), toHomogenous(pts2)
+    print("pts homogenous shape is", pts1_homogenous.shape)
 
     assert(F.shape == (3, 3))
     assert(F[2, 2] == 1)

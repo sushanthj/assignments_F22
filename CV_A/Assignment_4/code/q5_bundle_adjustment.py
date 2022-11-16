@@ -50,7 +50,7 @@ Q5.1: RANSAC method.
     (4) You can increase the nIters to bigger/smaller values
  
 '''
-def ransacF(pts1, pts2, M, im1, im2, nIters=500, tol=2):
+def ransacF(pts1, pts2, M, im1, im2, nIters=1000, tol=18):
     """
     Every iteration we init a Homography matrix using 4 corresponding
     points and calculate number of inliers. Finally use the Homography
@@ -75,7 +75,7 @@ def ransacF(pts1, pts2, M, im1, im2, nIters=500, tol=2):
 
     # define a container for keeping track of inlier counts
     final_inlier_count = 0
-    final_distance_error = 10000
+    final_distance_error = 100000000
 
     #? Create a boolean vector of length N where 1 = inlier and 0 = outlier
     print("Computing RANSAC")
@@ -111,7 +111,7 @@ def ransacF(pts1, pts2, M, im1, im2, nIters=500, tol=2):
         if error_state == 1:
             continue
 
-        if (inlier_count > final_inlier_count) and (distance_error < final_distance_error):
+        if (inlier_count > final_inlier_count): #and (distance_error < final_distance_error):
             final_inlier_count = inlier_count
             final_inliers = inliers
             final_corresp_points_1 = correspondence_points_1
@@ -120,10 +120,10 @@ def ransacF(pts1, pts2, M, im1, im2, nIters=500, tol=2):
             final_test_locs1 = test_locs1
             final_test_locs2 = test_locs2
         
-    if final_distance_error != 10000:
+    if final_distance_error != 100000000:
         # print("original point count is", locs1.shape[0])
-        # print("final inlier count is", final_inlier_count)
-        # print("final inlier's cumulative distance error is", final_distance_error)
+        print("final inlier count is", final_inlier_count)
+        print("final inlier's cumulative distance error is", final_distance_error)
 
         delete_indexes = np.where(final_inliers==0)
         final_locs_1 = np.delete(final_test_locs1, delete_indexes, axis=0)
@@ -136,6 +136,7 @@ def ransacF(pts1, pts2, M, im1, im2, nIters=500, tol=2):
         return bestH2to1, final_inliers
     
     else:
+        print("SOMETHING WRONG")
         bestH2to1 = eightpoint(correspondence_points_1, correspondence_points_2, M)
         return bestH2to1, 0
     
@@ -146,8 +147,8 @@ def compute_inliers(f, x1, x2, tol, im1, im2):
     Fundamental matrix
     Args:
         h  : Fundamental matrix
-        x1 : matched points in image 1
-        x2 : matched points in image 2
+        x1 : matched points in image 1 (Nx2)
+        x2 : matched points in image 2 (Nx2)
         tol: tolerance value to check for inliers
 
     Returns:
@@ -162,17 +163,11 @@ def compute_inliers(f, x1, x2, tol, im1, im2):
     # except:
     #     return [1,1,1], 1, 1, 1
 
-    x2_est = np.zeros((x2.shape), dtype=x2.dtype)
-
-    for i in range(x1.shape[0]):
-        # print("the x and y points are", x1[i,0], x1[i,1])
-        x2_est[i,0], x2_est[i,1] = epipolarCorrespondence(im1, im2, f, x1[i,0], x1[i,1])  #F @ x1_extd[i,:]
+    pts1_homogenous, pts2_homogenous = toHomogenous(x1), toHomogenous(x2)
+    dist_error = calc_epi_error(pts1_homogenous, pts2_homogenous, f)
+    dist_error= np.expand_dims(dist_error, axis=1)
     
-    # print("shape of x2 and x2_est is", x2.shape, x2_est.shape)
-    print("diff shape is", (x2-x2_est).shape)
-    dist_error = np.linalg.norm((x2-x2_est),axis=1)
-    
-    print("dist error is", dist_error.shape)
+    print("dist error is", np.sum(dist_error))
     inliers = np.where((dist_error < tol), 1, 0)
     inlier_count = np.count_nonzero(inliers == 1)
     print("inlier count is", inlier_count)
