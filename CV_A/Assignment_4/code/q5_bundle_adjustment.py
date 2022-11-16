@@ -50,7 +50,7 @@ Q5.1: RANSAC method.
     (4) You can increase the nIters to bigger/smaller values
  
 '''
-def ransacF(pts1, pts2, M, im1, im2, nIters=1000, tol=18):
+def ransacF(pts1, pts2, M, im1, im2, nIters=100, tol=18):
     """
     Every iteration we init a Homography matrix using 4 corresponding
     points and calculate number of inliers. Finally use the Homography
@@ -111,7 +111,7 @@ def ransacF(pts1, pts2, M, im1, im2, nIters=1000, tol=18):
         if error_state == 1:
             continue
 
-        if (inlier_count > final_inlier_count): #and (distance_error < final_distance_error):
+        if (inlier_count > final_inlier_count):
             final_inlier_count = inlier_count
             final_inliers = inliers
             final_corresp_points_1 = correspondence_points_1
