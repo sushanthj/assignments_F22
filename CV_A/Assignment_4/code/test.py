@@ -1,15 +1,13 @@
 import math
 import numpy as np
 
-a = np.ones(shape=(3,3,3))
+a = np.array([[1,2], [3,4]])
 
-gauss_window = np.zeros(shape=(3,3))
+b = np.array([[5,6], [7,8]])
 
-gauss_window[1,1] = 1
-print(gauss_window)
+a = a.flatten()
+b = b.flatten()
 
-gauss_window = np.stack((gauss_window, gauss_window, gauss_window), axis=2)
+c = np.append(a,b)
 
-print(gauss_window[:,:,0])
-
-print((a*gauss_window)[:,:,0])
+print(c)

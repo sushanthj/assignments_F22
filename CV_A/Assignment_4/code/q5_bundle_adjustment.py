@@ -173,7 +173,7 @@ def compute_inliers(f, x1, x2, tol, im1, im2):
 '''
 Q5.2: Rodrigues formula.
     Input:  r, a 3x1 vector
-    Output: R, a rotation matrix
+    Output: R, a 3x3 rotation matrix
 '''
 def rodrigues(r):
     """
@@ -190,8 +190,8 @@ def rodrigues(r):
     if thetha == 0:
         R = np.eye(3,3)
     else:
-        print("shape of u is", u)
         u = r/thetha
+        print("shape of u is", u)
         u_skew = np.array([[0, -u[2], u[1]], 
                            [u[2], 0, -u[0]],
                            [-u[1], u[0], 0]])
@@ -241,13 +241,68 @@ Q5.3: Rodrigues residual.
             p1, the 2D coordinates of points in image 1
             K2, the intrinsics of camera 2
             p2, the 2D coordinates of points in image 2
-            x, the flattened concatenationg of P, r2, and t2 
+            x, the flattened concatenation of P, r2, and t2 
                (we get M2(r2 and t2) and P using findM2 function)
     Output: residuals, 4N x 1 vector, the difference between original and estimated projections
 '''
 def rodriguesResidual(K1, M1, p1, K2, p2, x):
-    # Replace pass by your implementation
-    pass
+    """
+    Generate the reprojection error, we call it residual_error here
+    Args:
+        K1 (3x3)     : Intrinsic matrix of camera 1
+        M1 (3x4)     : Extrinsic matrix of camera 1
+        p1 (Nx2)     : keypoints in camera1's image (2D)
+        K2 (3x3)     : Intrinsic matrix of camera 2
+        p2 (Nx2)     : keypoints in camera2's image
+        x  (3N +3 +3): the flattened concatenation of P, r2, and t2 
+                       (we get M2(r2 and t2) and P using findM2 function)
+    """
+    
+    '''
+    x has P.flatten() viz Nx3 flattened as 3N
+    the 3N gets added with 3 numbers to represent rotation in rodrigues form
+    the 3N + 3 again gets appended with 3 numbers which represent translation in 3D
+    therefore the final x will be of shape 3N + 3 + 3 = 3N + 6
+    '''
+    print("p1 and P shapes are", p1.shape, P.shape)
+    
+    # decompose x
+    P = x[0:-6]
+    P = np.reshape(P, newshape=(P.shape[0]/3,3))
+    
+    r2 = x[-6:-3]
+    # reshape to 3x1 to feed to inverse rodrigues
+    r2 = r2.reshape(3,1)
+
+    # reshape translation matrix to combine in transformation matrix
+    t2 = x[-3:].reshape(3,1)
+
+    # compose the C2 matrix
+    R2 = rodrigues(r2)
+    M2 = np.hstack((R2,t2))
+    C2 = K2 @ M2
+
+    # compose the C1 matrix
+    C1 = K1 @ M1
+
+    # homogenize P to contain a 1 in the end (P = Nx3 vector)
+    P_homogenous = np.append((P, np.ones(P.shape[0])), axis=1)
+    
+    # Find the projection of P1 onto image 1 (vectorize)
+    # Transpose P_homogenous to make it a 4xN vector and left mulitply with C1
+    #  3xN =  3x4 @ 4XN
+    p1_hat = (C1 @ P_homogenous.T)
+    # normalize and transpose to get back to format of p1
+    p1_hat = ((p1_hat/p1_hat[2,:])[0:2,:]).T
+
+    # Repeat for C2
+    p2_hat = (C2 @ P_homogenous.T)
+    # normalize and transpose to get back to format of p2
+    p2_hat = ((p2_hat/p2_hat[2,:])[0:2,:]).T
+
+    residuals = np.concatenate([(p1-p1_hat).reshape([-1]),(p2-p2_hat).reshape([-1])])
+
+    return residuals
 
 
 '''
@@ -299,6 +354,9 @@ if __name__ == "__main__":
 
     F, inliers = ransacF(noisy_pts1, noisy_pts2, M, im1, im2)
     inlier_pts1, inlier_pts2 = inliers[0], inliers[1]
+    
+    print("shape of noisy_pts1 is", noisy_pts1.shape)
+    print("shape of inlier_pts1 is", inlier_pts1.shape)
 
     F_naieve = eightpoint(noisy_pts1, noisy_pts2, M)
 
@@ -307,16 +365,9 @@ if __name__ == "__main__":
     # displayEpipolarF(im1, im2, F_naieve)
 
     # Simple Tests to verify your implementation:
-    pts1_homogenous, pts2_homogenous = toHomogenous(noisy_pts1), toHomogenous(noisy_pts2)
-
     assert(F.shape == (3, 3))
     assert(F[2, 2] == 1)
     assert(np.linalg.matrix_rank(F) == 2)
-    
-    #? Getting the residuals
-    # Assuming the rotation and translation of camera1 is zero
-    M1 = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]])
-
 
     # Simple Tests to verify your implementation:
     from scipy.spatial.transform import Rotation as sRot
@@ -325,7 +376,18 @@ if __name__ == "__main__":
 
     assert(np.linalg.norm(rotVec.as_rotvec() - invRodrigues(mat)) < 1e-3)
     assert(np.linalg.norm(rotVec.as_matrix() - mat) < 1e-3)
+    
+    #? Getting the initial guess for M2 and P
+    # Assuming the rotation and translation of camera1 is zero
+    M1 = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]])
+    P_init, M2_init = findM2(F, inlier_pts1, inlier_pts2, intrinsics)
 
-
-
-    # YOUR CODE HERE
+    M2_final, P_final, start_obj, end_obj = bundleAdjustment(
+                                                             K1, 
+                                                             M1, 
+                                                             inlier_pts1, 
+                                                             K2, 
+                                                             M2_init, 
+                                                             inlier_pts2, 
+                                                             P_init
+                                                             )

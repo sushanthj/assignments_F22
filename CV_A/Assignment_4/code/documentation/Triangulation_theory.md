@@ -15,6 +15,13 @@ The above theory is summarized as:
 
 ![](/documentation/images/triangulation_formula.png)
 
+After finding the 3D points, we will reproject them back onto the image and compare them with our original correspondence points (which we either manually selected or got from some keypoint detector like ORB or BRIEF)
+
+The formula for reprojection error in this case is:
+$$
+\operatorname{err}=\sum_i\left\|\mathbf{x}_{1 i}, \widehat{\mathbf{x}_{1 i}}\right\|^2+\left\|\mathbf{x}_{2 i}, \widehat{\mathbf{x}_{2 i}}\right\|^2
+$$
+
 
 ## findM2
 Previsously we saw that we need an M2 to triangulate, but we don't have an M2 yet :/.  \
