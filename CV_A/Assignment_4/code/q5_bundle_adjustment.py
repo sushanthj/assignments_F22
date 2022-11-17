@@ -50,7 +50,7 @@ Q5.1: RANSAC method.
     (4) You can increase the nIters to bigger/smaller values
  
 '''
-def ransacF(pts1, pts2, M, im1, im2, nIters=200, tol=18):
+def ransacF(pts1, pts2, M, im1, im2, nIters=1000, tol=18):
     """
     Every iteration we init a Homography matrix using 4 corresponding
     points and calculate number of inliers. Finally use the Homography
@@ -267,7 +267,6 @@ def rodriguesResidual(x, K1, M1, p1, K2, p2):
     P = x[0:-6]
     P_shape_req = int(P.shape[0]/3)
     P = np.reshape(P, newshape=(P_shape_req,3))
-    print("p1 and P shapes are", p1.shape, P.shape)
     
     r2 = x[-6:-3]
     # reshape to 3x1 to feed to inverse rodrigues
@@ -285,7 +284,7 @@ def rodriguesResidual(x, K1, M1, p1, K2, p2):
     C1 = K1 @ M1
 
     # homogenize P to contain a 1 in the end (P = Nx3 vector)
-    P_homogenous = np.append(P, np.ones(P.shape[0]), axis=1)
+    P_homogenous = np.append(P, np.ones((P.shape[0],1)), axis=1)
     
     # Find the projection of P1 onto image 1 (vectorize)
     # Transpose P_homogenous to make it a 4xN vector and left mulitply with C1
@@ -300,8 +299,10 @@ def rodriguesResidual(x, K1, M1, p1, K2, p2):
     p2_hat = ((p2_hat/p2_hat[2,:])[0:2,:]).T
 
     residuals = np.concatenate([(p1-p1_hat).reshape([-1]),(p2-p2_hat).reshape([-1])])
+    residuals = np.sum(residuals)
 
     return residuals
+
 
 
 '''
@@ -333,11 +334,13 @@ def bundleAdjustment(K1, M1, p1, K2, M2_init, p2, P_init):
     x_start = np.append(x_start, np.append(r2.flatten(), t2))
 
     obj_start = rodriguesResidual(x_start, K1, M1, p1, K2, p2)
-    print("obj start is", obj_start)
+    print("x_start shape is", x_start.shape)
 
     # optimization step
     from scipy.optimize import minimize
-    x_optimized, _ = minimize(rodriguesResidual, x_start, args=(K1, M1, p1, K2, p2))
+    x_optimized_obj = minimize(rodriguesResidual, x_start, args=(K1, M1, p1, K2, p2), method='Nelder-Mead')
+    print("x_end shape is", x_optimized_obj.x.shape)
+    x_optimized = x_optimized_obj.x
 
     obj_end = rodriguesResidual(x_optimized, K1, M1, p1, K2, p2)
 
