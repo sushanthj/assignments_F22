@@ -50,7 +50,7 @@ Q5.1: RANSAC method.
     (4) You can increase the nIters to bigger/smaller values
  
 '''
-def ransacF(pts1, pts2, M, im1, im2, nIters=100, tol=18):
+def ransacF(pts1, pts2, M, im1, im2, nIters=200, tol=18):
     """
     Every iteration we init a Homography matrix using 4 corresponding
     points and calculate number of inliers. Finally use the Homography
@@ -191,14 +191,12 @@ def rodrigues(r):
         R = np.eye(3,3)
     else:
         u = r/thetha
-        print("shape of u is", u)
-        u_skew = np.array([[0, -u[2], u[1]], 
-                           [u[2], 0, -u[0]],
-                           [-u[1], u[0], 0]])
+        u = np.reshape(u, newshape=(3,1))
+        u_skew = np.array([[0, -u[2,0], u[1,0]], 
+                           [u[2,0], 0, -u[0,0]],
+                           [-u[1,0], u[0,0], 0]])
 
-        R = np.eye(3,3)*np.cos(thetha) + \
-            (1 - np.cos(thetha))* (u @ u.T) + \
-            u_skew*np.sin(thetha)
+        R = np.cos(thetha)*np.eye(3,3) + ((1 - np.cos(thetha))*(u @ u.T)) + np.sin(thetha)*u_skew
     
     return R
 
@@ -220,7 +218,7 @@ def invRodrigues(R):
     """
     A = (R - R.T)/2
     rho = np.array([[A[2,1]],[A[0,2]],[A[1,0]]])
-    s = np.linalg.norm(A)
+    s = np.linalg.norm(rho)
     c = (R[0,0] + R[1,1] + R[2,2] - 1)/2
     
     if s == 0 and c == 1:
@@ -231,7 +229,7 @@ def invRodrigues(R):
         thetha = np.arctan2(s,c)
         r = thetha*u
     
-    return r
+    return r[:,0]
 
 
 '''
@@ -245,7 +243,7 @@ Q5.3: Rodrigues residual.
                (we get M2(r2 and t2) and P using findM2 function)
     Output: residuals, 4N x 1 vector, the difference between original and estimated projections
 '''
-def rodriguesResidual(K1, M1, p1, K2, p2, x):
+def rodriguesResidual(x, K1, M1, p1, K2, p2):
     """
     Generate the reprojection error, we call it residual_error here
     Args:
@@ -264,11 +262,12 @@ def rodriguesResidual(K1, M1, p1, K2, p2, x):
     the 3N + 3 again gets appended with 3 numbers which represent translation in 3D
     therefore the final x will be of shape 3N + 3 + 3 = 3N + 6
     '''
-    print("p1 and P shapes are", p1.shape, P.shape)
     
     # decompose x
     P = x[0:-6]
-    P = np.reshape(P, newshape=(P.shape[0]/3,3))
+    P_shape_req = int(P.shape[0]/3)
+    P = np.reshape(P, newshape=(P_shape_req,3))
+    print("p1 and P shapes are", p1.shape, P.shape)
     
     r2 = x[-6:-3]
     # reshape to 3x1 to feed to inverse rodrigues
@@ -286,7 +285,7 @@ def rodriguesResidual(K1, M1, p1, K2, p2, x):
     C1 = K1 @ M1
 
     # homogenize P to contain a 1 in the end (P = Nx3 vector)
-    P_homogenous = np.append((P, np.ones(P.shape[0])), axis=1)
+    P_homogenous = np.append(P, np.ones(P.shape[0]), axis=1)
     
     # Find the projection of P1 onto image 1 (vectorize)
     # Transpose P_homogenous to make it a 4xN vector and left mulitply with C1
@@ -324,14 +323,42 @@ Q5.3 Bundle adjustment.
         You can try different (method='..') in scipy.optimize.minimize for best results. 
 '''
 def bundleAdjustment(K1, M1, p1, K2, M2_init, p2, P_init):
-    # Replace pass by your implementation
-    pass
+    
+    # given M2_init decompose it into R and t
+    R2 = M2_init[:,0:3]
+    t2 = M2_init[:,3]
+    r2 = invRodrigues(R2)
 
-    obj_start = obj_end = 0
-    # ----- TODO -----
-    # YOUR CODE HERE
-    raise NotImplementedError()
-    return M2, P, obj_start, obj_end
+    x_start = P_init.flatten()
+    x_start = np.append(x_start, np.append(r2.flatten(), t2))
+
+    obj_start = rodriguesResidual(x_start, K1, M1, p1, K2, p2)
+    print("obj start is", obj_start)
+
+    # optimization step
+    from scipy.optimize import minimize
+    x_optimized, _ = minimize(rodriguesResidual, x_start, args=(K1, M1, p1, K2, p2))
+
+    obj_end = rodriguesResidual(x_optimized, K1, M1, p1, K2, p2)
+
+    # recompute the M2 and P
+    # decompose x
+    P_final = x_optimized[0:-6]
+    P_shape_req = int(P_final.shape[0]/3)
+    P_final = np.reshape(P_final, newshape=(P_shape_req,3))
+    
+    r2_final = x_optimized[-6:-3]
+    # reshape to 3x1 to feed to inverse rodrigues
+    r2_final = r2_final.reshape(3,1)
+
+    # reshape translation matrix to combine in transformation matrix
+    t2_final = x_optimized[-3:].reshape(3,1)
+
+    # compose the C2 matrix
+    R2_final = rodrigues(r2_final)
+    M2_final = np.hstack((R2_final, t2_final))
+    
+    return M2_final, P_final, obj_start, obj_end
 
 
 
@@ -354,7 +381,7 @@ if __name__ == "__main__":
 
     F, inliers = ransacF(noisy_pts1, noisy_pts2, M, im1, im2)
     inlier_pts1, inlier_pts2 = inliers[0], inliers[1]
-    
+
     print("shape of noisy_pts1 is", noisy_pts1.shape)
     print("shape of inlier_pts1 is", inlier_pts1.shape)
 
@@ -373,21 +400,25 @@ if __name__ == "__main__":
     from scipy.spatial.transform import Rotation as sRot
     rotVec = sRot.random()
     mat = rodrigues(rotVec.as_rotvec())
-
     assert(np.linalg.norm(rotVec.as_rotvec() - invRodrigues(mat)) < 1e-3)
     assert(np.linalg.norm(rotVec.as_matrix() - mat) < 1e-3)
-    
+
     #? Getting the initial guess for M2 and P
     # Assuming the rotation and translation of camera1 is zero
     M1 = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]])
-    P_init, M2_init = findM2(F, inlier_pts1, inlier_pts2, intrinsics)
+    M2_init, C2, P_init, M1, C1 = findM2(F, inlier_pts1, inlier_pts2, intrinsics)
+    print("M2 shape is", M2_init)
 
+    # Optimize the M2
     M2_final, P_final, start_obj, end_obj = bundleAdjustment(
-                                                             K1, 
-                                                             M1, 
-                                                             inlier_pts1, 
-                                                             K2, 
-                                                             M2_init, 
-                                                             inlier_pts2, 
-                                                             P_init
-                                                             )
+                                                            K1, 
+                                                            M1, 
+                                                            inlier_pts1, 
+                                                            K2, 
+                                                            M2_init, 
+                                                            inlier_pts2, 
+                                                            P_init
+                                                            )
+
+    # compare the old M2 to optimized M2
+    plot_3D_dual(P_init, P_final)
