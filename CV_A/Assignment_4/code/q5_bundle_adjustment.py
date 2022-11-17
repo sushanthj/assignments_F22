@@ -6,7 +6,7 @@ from copy import deepcopy
 from helper import displayEpipolarF, calc_epi_error, toHomogenous
 from q2_1_eightpoint import eightpoint
 from q2_2_sevenpoint import sevenpoint
-from q3_2_triangulate import findM2
+from q3_2_triangulate import findM2, triangulate
 from q4_1_epipolar_correspondence import epipolarCorrespondence
 
 import scipy
@@ -338,7 +338,7 @@ def bundleAdjustment(K1, M1, p1, K2, M2_init, p2, P_init):
 
     # optimization step
     from scipy.optimize import minimize
-    x_optimized_obj = minimize(rodriguesResidual, x_start, args=(K1, M1, p1, K2, p2), method='Nelder-Mead')
+    x_optimized_obj = minimize(rodriguesResidual, x_start, args=(K1, M1, p1, K2, p2), method=None)
     print("x_end shape is", x_optimized_obj.x.shape)
     x_optimized = x_optimized_obj.x
 
@@ -424,4 +424,7 @@ if __name__ == "__main__":
                                                             )
 
     # compare the old M2 to optimized M2
-    plot_3D_dual(P_init, P_final)
+    # plot_3D_dual(P_init, P_final)
+
+    _, err = triangulate(C1, inlier_pts1, C2, inlier_pts2)
+    print("error before bundle was", err)
