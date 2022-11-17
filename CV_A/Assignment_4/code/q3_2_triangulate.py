@@ -90,12 +90,8 @@ def triangulate(C1, pts1, C2, pts2):
         # 3x1 = 3x4 . 3x1 
         pt_1 = ((C1 @ X)/(C1 @ X)[2,0])[0:2,0]
         pt_2 = ((C2 @ X)/(C2 @ X)[2,0])[0:2,0]
-        
-        # print("found point 1 is", pt_1)
-        # print("orig point 1 is", pts1[i,:])
-        # print("diff vals are", pt_1 - pts1[i,:])
-        # print("norm squared is is", np.linalg.norm(pt_1 - pts1[i,:])*np.linalg.norm(pt_1 - pts1[i,:]))
 
+        # calculate the reporjection error
         err += np.linalg.norm(pt_1 - pts1[i,:])**2 + np.linalg.norm(pt_2 - pts2[i,:])**2
 
     print("error in this iteration is", err)
@@ -161,11 +157,13 @@ def findM2(F, pts1, pts2, intrinsics, filename = 'q3_3.npz'):
 
     if (best_M2_i is not None) and (best_pts_3d is not None):
         print("min err is", err_min)
-        # print("3D points are", best_pts_3d)
+        
+        # return M2, C2, w(3d points), M1, C1
         return M2[:,:,best_M2_i], (K2 @ M2[:,:,best_M2_i]), best_pts_3d, M1, (K1 @ M1) # last entry is C1
+    
     else:
         print("could not converge to best M2")
-        return 0,0,0
+        return 0,0,0,0,0
 
 
 

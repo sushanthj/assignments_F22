@@ -241,7 +241,8 @@ Q5.3: Rodrigues residual.
             p1, the 2D coordinates of points in image 1
             K2, the intrinsics of camera 2
             p2, the 2D coordinates of points in image 2
-            x, the flattened concatenationg of P, r2, and t2.
+            x, the flattened concatenationg of P, r2, and t2 
+               (we get M2(r2 and t2) and P using findM2 function)
     Output: residuals, 4N x 1 vector, the difference between original and estimated projections
 '''
 def rodriguesResidual(K1, M1, p1, K2, p2, x):
@@ -255,9 +256,9 @@ Q5.3 Bundle adjustment.
             M1, the extrinsics of camera 1
             p1, the 2D coordinates of points in image 1
             K2,  the intrinsics of camera 2
-            M2_init, the initial extrinsics of camera 1
+            M2_init, the initial extrinsics of camera 1 (get this from findM2)
             p2, the 2D coordinates of points in image 2
-            P_init, the initial 3D coordinates of points
+            P_init, the initial 3D coordinates of points (get this also from findM2)
     Output: M2, the optimized extrinsics of camera 1
             P2, the optimized 3D coordinates of points
             o1, the starting objective function value with the initial input
@@ -293,6 +294,7 @@ if __name__ == "__main__":
     templeCoords = np.load('data/templeCoords.npz')
     temple_pts1 = np.hstack([templeCoords["x1"], templeCoords["y1"]])
 
+    #? getting the F matrix from noisy correspondences
     M = np.max([*im1.shape, *im2.shape])
 
     F, inliers = ransacF(noisy_pts1, noisy_pts2, M, im1, im2)
@@ -311,9 +313,9 @@ if __name__ == "__main__":
     assert(F[2, 2] == 1)
     assert(np.linalg.matrix_rank(F) == 2)
     
+    #? Getting the residuals
     # Assuming the rotation and translation of camera1 is zero
     M1 = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]])
-    residuals = rodriguesResidual(K1, M1, inlier_pts1, K2, inlier_pts2)
 
 
     # Simple Tests to verify your implementation:
