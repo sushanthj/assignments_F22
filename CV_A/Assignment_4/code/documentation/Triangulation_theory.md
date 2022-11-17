@@ -11,9 +11,9 @@ Now, to estimate the 3D location of these points, we need
 3. [Some theory](https://www.dropbox.com/sh/r569lhrgq9z4x7l/AACGDws-F4Krdwagm1F3-tnja?dl=0&preview=L17+-+Camera+Models%2C+Pose+Estimation+and+Triangulation.pdf)
 
 The above theory is summarized as:
-![](documentation/triangulation_setup.png)
+![](/documentation/images/triangulation_setup.png)
 
-![](documentation/triangulation_formula.png)
+![](/documentation/images/triangulation_formula.png)
 
 
 ## findM2
@@ -41,7 +41,7 @@ def camera2(E):
 
 **Note: The above function gives three possible values for M2**
 
-![4 camera orientations](4cameras.jpg)
+![4 camera orientations](/documentation/images/4cameras.jpg)
 
 Now there are 2 checks we can use to find which is the right camera:
 - Determinant(Rotation component of M2) = 1 (so that the rotation belongs to SO(3))
@@ -78,7 +78,7 @@ the correct criteria for camera orientations. Additionally we'll also try to min
 We know that the error in the triangulation is basically difference between the projection of a 3D point and the actual point in 2D on the image. Now, we will move around the 3D points slightly and check in which orientation the reprojection error comes to a global minimum.
 The formula for the above operation is shown below:
 
-![](Bundle_formula.png)
+![](/documentation/images/Bundle_formula.png)
 
 The process  we will follow now is very code specific. An explanation for only this below code is shown, where we will only be minimizing the rotation and translation (M2 matrix) error.
 
@@ -100,12 +100,12 @@ Having the above content, we will need to derive our reprojection error. We will
 - **x** basically contains the translation and rotation of camera2. We can therefore get M2 from x
 - We can find the camera matrices ***C1 = K1 @ M1***, ***C2 = K2 @ M2***
 
-![](generic_projection_eq.png)
+![](/documentation/images/generic_projection_eq.png)
 
 - Use the above equation to get p1' and p2'
 - Compare p1' and p1, p2' and p2, to get the reprojection error we need in both cameras
 
-![](reproj_error_residuals.png)
+![](/documentation/images/reproj_error_residuals.png)
 
 **Now we have a function which will give us reprojection error for a given M2 matrix. Now lets see how we'll use this reporjection error to optimize our M2**
 
