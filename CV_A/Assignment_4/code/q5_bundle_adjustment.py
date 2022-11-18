@@ -299,7 +299,7 @@ def rodriguesResidual(x, K1, M1, p1, K2, p2):
     p2_hat = ((p2_hat/p2_hat[2,:])[0:2,:]).T
 
     residuals = np.concatenate([(p1-p1_hat).reshape([-1]),(p2-p2_hat).reshape([-1])])
-    residuals = np.sum(residuals)
+    residuals = np.linalg.norm(residuals)**2
 
     return residuals
 
@@ -338,7 +338,7 @@ def bundleAdjustment(K1, M1, p1, K2, M2_init, p2, P_init):
 
     # optimization step
     from scipy.optimize import minimize
-    x_optimized_obj = minimize(rodriguesResidual, x_start, args=(K1, M1, p1, K2, p2), method=None)
+    x_optimized_obj = minimize(rodriguesResidual, x_start, args=(K1, M1, p1, K2, p2), method='Powell')
     print("x_end shape is", x_optimized_obj.x.shape)
     x_optimized = x_optimized_obj.x
 
@@ -395,11 +395,6 @@ if __name__ == "__main__":
     # displayEpipolarF(im1, im2, F_naieve)
 
     # Simple Tests to verify your implementation:
-    assert(F.shape == (3, 3))
-    assert(F[2, 2] == 1)
-    assert(np.linalg.matrix_rank(F) == 2)
-
-    # Simple Tests to verify your implementation:
     from scipy.spatial.transform import Rotation as sRot
     rotVec = sRot.random()
     mat = rodrigues(rotVec.as_rotvec())
@@ -426,5 +421,5 @@ if __name__ == "__main__":
     # compare the old M2 to optimized M2
     # plot_3D_dual(P_init, P_final)
 
-    _, err = triangulate(C1, inlier_pts1, C2, inlier_pts2)
-    print("error before bundle was", err)
+    print("error before optimization is", start_obj)
+    print("error after optimization is", end_obj)
