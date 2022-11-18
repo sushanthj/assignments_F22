@@ -425,7 +425,7 @@ def main(question, state_descp):
                                             )
     # [x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
 
-    if int(question) == 4:
+    if int(question) > 3:
         time_initial, time_final, time_step, time_vec, max_iteration = state_descp.time_params()
         finish_time_iteration = max_iteration-1
         # get trajectory from the state_descriptor class
@@ -518,7 +518,7 @@ def main(question, state_descp):
         actual_state_matrix[0:12,i+1] = state_list[0:12]
         actual_state_matrix[12:15,i+1] = acc
 
-        if int(question) == 4:
+        if int(question) > 3:
             convergence = check_convergence(state_descp, actual_state_matrix[:,i+1])
             if convergence is True:
                 finish_time_iteration = (i+2)
@@ -557,7 +557,7 @@ def main(question, state_descp):
                 "time_step": time_step
                 }
 
-def state_machine(question):
+def state_machine(question, traj):
     """
     inherit the class which will define boundaries of the states
     params (list): list of [ start_points[x,y,z,yaw], 
@@ -591,7 +591,7 @@ def state_machine(question):
 
     print("executing mode 3: Trajectory")
     # Note: the start pos of this mode should always be same as the end pos of mode_2
-    mode_3_params = [ [0,0,1,0], [2,1,1,0], 10, 100]
+    mode_3_params = traj
     mode_3 = state_descriptor.StateDescriptor(3, mode_3_params, mode_2.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_3)
@@ -599,7 +599,13 @@ def state_machine(question):
     print("\n")
 
     print("executing mode 4: Landing")
-    mode_4_params = [ [2,1,1,0], [2,1,0,0], 20, 100]
+    mode_3_final_pos = mode_3_params[1]
+    mode_4_start_pos = deepcopy(mode_3_final_pos)
+    print("start pos is",mode_3_final_pos)
+    mode_3_final_pos[2] = 0
+    mode_4_final_pos = mode_3_final_pos
+    print("start pos is",mode_4_final_pos)
+    mode_4_params = [ mode_4_start_pos, mode_4_final_pos, 20, 100]
     mode_4 = state_descriptor.StateDescriptor(4, mode_4_params, mode_3.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_4)
@@ -668,11 +674,6 @@ def calcuate_overall_time_and_pose(state_array):
         time_finish_iter = state["finish_time_iter"]
         time_vec_cut = time_vec[:time_finish_iter]
         overall_time_vec = overall_time_vec + time_vec_cut
-        # print("for this mode the desired states were", state["desired_states"][0:3,0])
-        # print("for this mode the desired states were", state["desired_states"][0:3,1])
-        # print("for this mode the desired states were", state["desired_states"][0:3,-1])
-        # print("for this mode the desired states were", state["desired_states"][0:3,-2])
-        # print("\n")
 
         # combine the actual states, combine desired states
         overall_actual_state_vec = np.concatenate((overall_actual_state_vec, 
@@ -721,5 +722,12 @@ if __name__ == '__main__':
     question = sys.argv[1]
     if int(question) < 4:
         main(question, 0)
-    else:
-        state_machine(question)
+
+    elif int(question) == 4:
+        traj = [ [0,0,1,0], [2,1,1,0], 10, 100]
+        state_machine(question, traj)
+
+    elif int(question) == 5:
+        traj = [ [0,0,1,0], [0,0,0.1,0], 10, 100]
+        question = 4
+        state_machine(question, traj)

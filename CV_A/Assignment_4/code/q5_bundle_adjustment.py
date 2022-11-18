@@ -299,11 +299,16 @@ def rodriguesResidual(x, K1, M1, p1, K2, p2):
     p2_hat = ((p2_hat/p2_hat[2,:])[0:2,:]).T
 
     residuals = np.concatenate([(p1-p1_hat).reshape([-1]),(p2-p2_hat).reshape([-1])])
-    residuals = np.linalg.norm(residuals)**2
 
     return residuals
 
 
+def residual_norm(x, K1, M1, p1, K2, p2):
+    residuls = rodriguesResidual(x, K1, M1, p1, K2, p2)
+    
+    residuals = np.linalg.norm(residuls)**2
+
+    return residuls
 
 '''
 Q5.3 Bundle adjustment.
@@ -338,7 +343,7 @@ def bundleAdjustment(K1, M1, p1, K2, M2_init, p2, P_init):
 
     # optimization step
     from scipy.optimize import minimize
-    x_optimized_obj = minimize(rodriguesResidual, x_start, args=(K1, M1, p1, K2, p2), method='Powell')
+    x_optimized_obj = minimize(residual_norm, x_start, args=(K1, M1, p1, K2, p2), method='Powell')
     print("x_end shape is", x_optimized_obj.x.shape)
     x_optimized = x_optimized_obj.x
 
@@ -421,5 +426,5 @@ if __name__ == "__main__":
     # compare the old M2 to optimized M2
     # plot_3D_dual(P_init, P_final)
 
-    print("error before optimization is", start_obj)
-    print("error after optimization is", end_obj)
+    print("error before optimization is", np.linalg.norm(start_obj)**2)
+    print("error after optimization is", np.linalg.norm(end_obj)**2)
