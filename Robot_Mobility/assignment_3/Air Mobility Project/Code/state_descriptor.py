@@ -47,7 +47,7 @@ class StateDescriptor:
             
             return trajectory_state, waypoints
             
-        elif self.mode == 1 or self.mode == 4:
+        elif self.mode == 1 :
             
             dist_step = (self.end[2] - self.start[2])/num_steps
 
@@ -88,7 +88,39 @@ class StateDescriptor:
                                                                         trajectory_state)
                 return trajectory_state, waypoints
         
-        elif self.mode == 3:
+        elif self.mode == 3 or self.mode == 4:
+
+            # unconstrained trajectory
+            # waypoints = [x_vals],[y_vals],[z_vals],[yaw_vals]
+            waypoints = np.array([[self.start[0], self.end[0]],
+                                  [self.start[1], self.end[1]],
+                                  [self.start[2], self.end[2]],
+                                  [self.start[3], self.end[3]]])
+            print("waypoints is\n", waypoints)
+            self.final_time = self.params[2]+self.start_time
+            waypoint_times = [self.start_time, self.final_time]
+            
+            # vector of timesteps
+            print("start and end time is", self.start_time, self.final_time)
+            self.time_vec = np.arange(self.start_time, self.final_time+self.time_step, self.time_step).tolist()
+            self.max_iteration = len(self.time_vec)
+            trajectory_state = np.zeros((15, self.max_iteration))
+            trajectory_state, waypoints, = self.generate_trajectory(waypoint_times, 
+                                                                    waypoints, 
+                                                                    trajectory_state)
+            extra_time_params = [
+                                 self.start_time, 
+                                 self.final_time, 
+                                 self.time_step, 
+                                 self.time_vec, 
+                                 self.max_iteration
+                                 ]
+            
+            return extra_time_params, trajectory_state, waypoints
+
+        '''
+        elif self.mode == 4:
+            # constant velocity trajectory
             print("start and end are", self.start, self.end)
             changed_states = np.where(np.array(self.start) != np.array(self.end))
             print("changed states are", changed_states)
@@ -119,8 +151,7 @@ class StateDescriptor:
             trajectory_state, waypoints, = self.generate_trajectory(waypoint_times, 
                                                                     waypoints, 
                                                                     trajectory_state)
-
-            return trajectory_state, waypoints
+            '''
     
     def time_params(self):
         # Set the simualation parameters
@@ -159,6 +190,9 @@ class StateDescriptor:
                 if (i*self.time_step) >= (waypoint_times[current_waypoint_number+1] 
                                             - self.start_time):
                     current_waypoint_number +=1
+                    # print("i value is", i)
+                    # print("max iters were", self.max_iteration)
+                    # print("current_waypoint number is", current_waypoint_number)
 
             trajectory_state[0:3, i] = waypoints[0:3, current_waypoint_number]
             trajectory_state[8,i] = waypoints[3, current_waypoint_number]

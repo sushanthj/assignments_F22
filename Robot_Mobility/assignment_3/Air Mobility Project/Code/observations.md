@@ -1,0 +1,1 @@
+For the state machine to work in q4, just uncomment the elif mode == 4 part

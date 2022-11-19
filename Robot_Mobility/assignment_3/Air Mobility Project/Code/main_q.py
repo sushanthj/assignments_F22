@@ -429,7 +429,14 @@ def main(question, state_descp):
         time_initial, time_final, time_step, time_vec, max_iteration = state_descp.time_params()
         finish_time_iteration = max_iteration-1
         # get trajectory from the state_descriptor class
-        trajectory_matrix, waypoints = state_descp.traj_generator()
+        if (state_descp.mode != 3) and (state_descp.mode != 4):
+            trajectory_matrix, waypoints = state_descp.traj_generator()
+        
+        else:
+            extra_time_params, trajectory_matrix, waypoints = state_descp.traj_generator()
+            time_initial, time_final, time_step, time_vec, max_iteration = extra_time_params
+            finish_time_iteration = max_iteration-1
+
         state[0] = waypoints[0,0]
         state[1] = waypoints[1,0]
         state[2] = waypoints[2,0]
@@ -516,13 +523,18 @@ def main(question, state_descp):
         actual_state_matrix[12:15,i+1] = acc
 
         if int(question) > 3:
-            convergence = check_convergence(state_descp, actual_state_matrix[:,i+1])
+            convergence = check_convergence(
+                                            actual_desired_state_matrix[:, i+1], 
+                                            actual_state_matrix[:,i+1]
+                                            )
             if convergence is True:
                 finish_time_iteration = (i+2)
                 finish_time = (i+2)*time_step + time_initial
-                actual_state_matrix = actual_state_matrix[:,0:i+2]
-                actual_desired_state_matrix = actual_desired_state_matrix[:,0:i+2]
+                actual_state_matrix = actual_state_matrix[:,:i+2]
+                actual_desired_state_matrix = actual_desired_state_matrix[:,:i+2]
                 print("breaking iteration was", i+2)
+                print("final pos of quad was \n", actual_state_matrix[0:3, i+1])
+                print("final desired pos of quad was \n", actual_desired_state_matrix[0:3, i+1])
                 break
             else:
                 continue
@@ -544,6 +556,8 @@ def main(question, state_descp):
             actual_state_matrix = actual_state_matrix
             actual_desired_state_matrix = actual_desired_state_matrix
             print("breaking iteration was", max_iteration)
+            print("final pos of quad was", actual_state_matrix[0:3, max_iteration-2])
+            print("final desired pos of quad was", actual_desired_state_matrix[0:3, max_iteration-2])
         return {
                 "actual_states" : actual_state_matrix, 
                 "desired_states" : actual_desired_state_matrix, 
@@ -596,12 +610,13 @@ def state_machine(question, traj):
     print("\n")
 
     print("executing mode 4: Landing")
+    # land in the same spot of x,y,yaw as before, only change z to 0
     mode_3_final_pos = mode_3_params[1]
     mode_4_start_pos = deepcopy(mode_3_final_pos)
-    print("start pos is",mode_3_final_pos)
+    print("start pos is",mode_4_start_pos)
     mode_3_final_pos[2] = 0
     mode_4_final_pos = mode_3_final_pos
-    print("start pos is",mode_4_final_pos)
+    print("end pos is",mode_4_final_pos)
     mode_4_params = [ mode_4_start_pos, mode_4_final_pos, 20, 100]
     mode_4 = state_descriptor.StateDescriptor(4, mode_4_params, mode_3.final_time)
     # track quad and save the actual vs desired states
@@ -610,7 +625,7 @@ def state_machine(question, traj):
     print("\n")
 
     # calculate rise time for the mode3
-    calc_rise_and_overshoot(mode_3)
+    calc_rise_and_overshoot(mode_4)
     
     # calculate the overall time vector across all the states
     state_array = [ mode_0.final_state, 
@@ -630,7 +645,7 @@ def state_machine(question, traj):
     plot_des_vs_track(actual_overall, desired_overall, time_vec_overall)
 
 
-def check_convergence(state_descp, actual_state):
+def check_convergence(desired_state, actual_state):
     """
     Check if robot has reached the destination and record state and time
     Args:
@@ -640,14 +655,16 @@ def check_convergence(state_descp, actual_state):
     Returns:
         convergence_condition: 1 = converged, 0 = not_yet_converged
     """
-    end_point_des = np.array(state_descp.params[1])
-    x_actual, y_actual, z_actual, yaw_actual = actual_state[0], \
-                                               actual_state[1], \
-                                               actual_state[2], \
-                                               actual_state[8]
     
-    end_point_actual = np.array([x_actual, y_actual, z_actual, yaw_actual])
-    error_in_pos = np.linalg.norm((end_point_des - end_point_actual))
+
+    # x_actual, y_actual, z_actual, yaw_actual = actual_state[0], \
+    #                                            actual_state[1], \
+    #                                            actual_state[2], \
+    #                                            actual_state[8]
+    
+    # end_point_actual = np.array([x_actual, y_actual, z_actual, yaw_actual])
+    # error_in_pos = np.linalg.norm((end_point_des - end_point_actual))
+    error_in_pos = np.linalg.norm(desired_state - actual_state)
     if error_in_pos < 0.01:
         print("converged")
         return True
@@ -713,7 +730,24 @@ def store_idle_pos(state_descp):
 
 def calc_rise_and_overshoot(state_obj):
     # find the desired time when the quad should start moving and when it should reach destination
-    start_time = state_obj
+    actual_states = state_obj.final_state["actual_states"]
+    desired_states = state_obj.final_state["desired_states"]
+    time_vec = state_obj.final_state["time_vec"]
+    time_finish_iter = state_obj.final_state["finish_time_iter"]
+    time_vec_cut = time_vec[:time_finish_iter]
+
+    print("act states", (actual_states.shape))
+    print("des states", (desired_states.shape))
+    print("time states", (len(time_vec_cut)))
+
+    z_actual_states = actual_states[2,:]
+    z_desired_states = desired_states[2,:]
+
+    psi_actual_states = actual_states[8,:]
+    psi_desired_states = desired_states[8,:]
+
+    print("desired_states are", z_desired_states[0:50])
+    print("actual_states are", z_actual_states[0:50])
 
 
 if __name__ == '__main__':
@@ -734,6 +768,6 @@ if __name__ == '__main__':
         state_machine(question, traj)
 
     elif int(question) == 5:
-        traj = [ [0,0,1,0], [0,0,0.1,0], 10, 100]
+        traj = [ [0,0,1,0], [0,0,0.1,0], 5, 100]
         question = 4
         state_machine(question, traj)
