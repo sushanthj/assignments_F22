@@ -50,7 +50,7 @@ Q5.1: RANSAC method.
     (4) You can increase the nIters to bigger/smaller values
  
 '''
-def ransacF(pts1, pts2, M, im1, im2, nIters=1000, tol=18):
+def ransacF(pts1, pts2, M, im1, im2, nIters=500, tol=18):
     """
     Every iteration we init a Homography matrix using 4 corresponding
     points and calculate number of inliers. Finally use the Homography
@@ -75,7 +75,7 @@ def ransacF(pts1, pts2, M, im1, im2, nIters=1000, tol=18):
 
     # define a container for keeping track of inlier counts
     final_inlier_count = 0
-    final_distance_error = 100000000
+    final_distance_error = 10000000000
 
     #? Create a boolean vector of length N where 1 = inlier and 0 = outlier
     print("Computing RANSAC")
@@ -304,11 +304,11 @@ def rodriguesResidual(x, K1, M1, p1, K2, p2):
 
 
 def residual_norm(x, K1, M1, p1, K2, p2):
-    residuls = rodriguesResidual(x, K1, M1, p1, K2, p2)
+    residuals = rodriguesResidual(x, K1, M1, p1, K2, p2)
     
-    residuals = np.linalg.norm(residuls)**2
+    residual_norm = np.linalg.norm(residuals)**2
 
-    return residuls
+    return residual_norm
 
 '''
 Q5.3 Bundle adjustment.
@@ -423,8 +423,8 @@ if __name__ == "__main__":
                                                             P_init
                                                             )
 
-    # compare the old M2 to optimized M2
-    # plot_3D_dual(P_init, P_final)
-
     print("error before optimization is", np.linalg.norm(start_obj)**2)
     print("error after optimization is", np.linalg.norm(end_obj)**2)
+    
+    # compare the old M2 to optimized M2
+    plot_3D_dual(P_init, P_final)
