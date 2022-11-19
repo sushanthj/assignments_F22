@@ -17,6 +17,8 @@ from copy import deepcopy
 from utils import plot_state_error, plot_position_3d, plot_des_vs_track
 from waypoints_traj import lookup_waypoints, trajectory_planner
 
+thrust_array = []
+
 def position_controller(current_state,desired_state,params,question, time_step):
     '''
     Input parameters:
@@ -69,8 +71,8 @@ def position_controller(current_state,desired_state,params,question, time_step):
     Kp2 = 17
     Kd2 = 6.6
 
-    Kp3 = 21
-    Kd3 = 5
+    Kp3 = 20
+    Kd3 = 9
 
     # TO DO:
     Kp = np.diag((Kp1, Kp2, Kp3))
@@ -195,7 +197,7 @@ def attitude_controller(params, current_state,desired_state,question):
     Kpphi = 190
     Kdphi = 30
 
-    Kptheta = 198
+    Kptheta = 190
     Kdtheta = 30
 
     Kppsi = 80
@@ -492,6 +494,7 @@ def main(question, state_descp):
         
         # Motor model
         F_actual, M_actual, rpm_motor_dot = motor_model(F,M,current_state,params)
+        thrust_array.append(F_actual)
         
         # Get the change in state from the quadrotor dynamics
         time_int = tuple((time_vec[i],time_vec[i+1]))
@@ -531,6 +534,10 @@ def main(question, state_descp):
                 continue
 
     if int(question) < 4:
+        # calculate rise time and overshoot
+        calcuate_rise_and_overshoot_for_z(actual_state_matrix, time_vec)
+        # calcuate_rise_and_overshoot_for_psi(actual_state_matrix, time_vec)
+
         # plot for values and errors
         plot_state_error(actual_state_matrix,actual_desired_state_matrix,time_vec)
 
@@ -538,7 +545,7 @@ def main(question, state_descp):
         plot_position_3d(actual_state_matrix,actual_desired_state_matrix)
 
         # plot desired pose vs actual pose
-        plot_des_vs_track(actual_state_matrix, actual_desired_state_matrix, time_vec)
+        plot_des_vs_track(actual_state_matrix, actual_desired_state_matrix, time_vec, thrust_array)
     else:
         if convergence is False:
             print("did not converge")
@@ -653,6 +660,30 @@ def check_convergence(state_descp, actual_state):
         return True
     else:
         return False
+
+def calcuate_rise_and_overshoot_for_z(state_vector, time_vec):
+    print("len of state array original is", state_vector.shape)
+    print("len of time vec is", len(time_vec))
+    # find rise time
+    rise_index = np.where(state_vector[2]>0.09)
+    rise_index = rise_index[0][0]
+    print("rise index is", rise_index)
+    rise_start_time = 4
+    rise_end_time = time_vec[rise_index]
+    print("rise time is", rise_end_time-rise_start_time)
+
+    # find max percentage overshoot
+    max_desired_value = 0.1
+    max_actual_value = np.max(state_vector[2,:])
+    max_pos_index = np.where(state_vector[2,:] == max_actual_value)[0][0]
+    print("max_pos_index is", max_pos_index)
+    print("max percentage overshoot is", (max_actual_value-max_desired_value)*100)
+
+    if ((max_actual_value-max_desired_value)*100 < 10):
+        print("settling time is", time_vec[rise_index] - 4)
+    
+    print("steady state value is", state_vector[2,-1], state_vector[8,-1])
+
 
 def calcuate_overall_time_and_pose(state_array):
     """
