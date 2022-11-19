@@ -455,7 +455,6 @@ def main(question, state_descp):
 
     # Loop through the timesteps and update quadrotor
     for i in range(max_iteration-1):
-        # break
         # convert current state to stuct for control functions
         current_state = {
                         "pos":state_list[0:3],
@@ -464,7 +463,6 @@ def main(question, state_descp):
                         "omega":state_list[9:12],
                         "rpm":state_list[12:16]
                         }
-        # print("current state is \n", current_state)
         
         # Get desired state from matrix, put into struct for control functions
         desired_state = {
@@ -474,7 +472,6 @@ def main(question, state_descp):
                         "omega":trajectory_matrix[9:12,i],
                         "acc":trajectory_matrix[12:15,i]
                         }
-        # print("desired state is \n", desired_state)
         
         # Get desired acceleration from position controller
         [F, desired_state["acc"], rot_matrix] = position_controller(
@@ -612,6 +609,9 @@ def state_machine(question, traj):
     mode_4.state_storage(states_saved)
     print("\n")
 
+    # calculate rise time for the mode3
+    calc_rise_and_overshoot(mode_3)
+    
     # calculate the overall time vector across all the states
     state_array = [ mode_0.final_state, 
                     mode_1.final_state, 
@@ -659,12 +659,14 @@ def calcuate_overall_time_and_pose(state_array):
     Combines the recorded states and time vectors of each state
     Args:
         state_array (list): array of state tracking histories saved in dict form
+    
+    Returns:
+        overall_time_vec: 
     """
     overall_time_vec = []
     overall_actual_state_vec = np.zeros(shape=(15,1))
     overall_desired_state_vec = np.zeros(shape=(15,1))
-
-    mode_num = 0
+    mode_num = 0    
 
     print("combining the individual time vectors")
     for state in state_array:
@@ -708,6 +710,10 @@ def store_idle_pos(state_descp):
                   }
     
     return saved_state
+
+def calc_rise_and_overshoot(state_obj):
+    # find the desired time when the quad should start moving and when it should reach destination
+    start_time = state_obj
 
 
 if __name__ == '__main__':

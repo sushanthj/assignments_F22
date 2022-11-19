@@ -26,7 +26,7 @@ class StateDescriptor:
         self.end = self.params[1]
 
     # class will contain method to generate trajs according to mode and params 
-    #   which are (traj start, end and time conditions)
+    #  which are (traj start, end and time conditions)
     # class will have control loop to execute trajectory
     # class will keep track of actual and desired states
     # class will have function to fetch the above states
@@ -86,7 +86,6 @@ class StateDescriptor:
                 trajectory_state, waypoints, = self.generate_trajectory(waypoint_times, 
                                                                         waypoints, 
                                                                         trajectory_state)
-
                 return trajectory_state, waypoints
         
         elif self.mode == 3:
@@ -107,7 +106,7 @@ class StateDescriptor:
             
             waypoints = np.array([vals[0], vals[1], vals[2], vals[3]])
 
-            print("waypoints in state descp class are ", waypoints.shape)
+            print("waypoints in state descp class are ", waypoints)
             step_size = duration/num_steps
             waypoint_times = np.arange(start=self.start_time, 
                                         stop=self.final_time+step_size, 
