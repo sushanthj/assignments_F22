@@ -585,7 +585,7 @@ def state_machine(question, traj):
     print("\n")
 
     print("executing mode 1: Takeoff")
-    mode_1_params = [ [0,0,0,0], [0,0,1,0], 20, 100]
+    mode_1_params = [ [0,0,0,0], [0,0,0.05,0], 20, 100]
     mode_1 = state_descriptor.StateDescriptor(1, mode_1_params, mode_0.final_time)
     # track quad and save the actual vs desired states
     states_saved = main(question, mode_1)
@@ -593,7 +593,7 @@ def state_machine(question, traj):
     print("\n")
 
     print("executing mode 2: Hover")
-    mode_2_params = [ [0,0,1,0], [0,0,1,0], 5, 5]
+    mode_2_params = [ [0,0,0.05,0], [0,0,0.05,0], 5, 5]
     mode_2 = state_descriptor.StateDescriptor(2, mode_2_params, mode_1.final_time)
     # track quad and save the actual vs desired states
     states_saved = store_idle_pos(mode_2)
@@ -614,7 +614,7 @@ def state_machine(question, traj):
     mode_3_final_pos = mode_3_params[1]
     mode_4_start_pos = deepcopy(mode_3_final_pos)
     print("start pos is",mode_4_start_pos)
-    mode_3_final_pos[2] = 0
+    mode_3_final_pos[2] = 0.1
     mode_4_final_pos = mode_3_final_pos
     print("end pos is",mode_4_final_pos)
     mode_4_params = [ mode_4_start_pos, mode_4_final_pos, 20, 100]
@@ -768,6 +768,6 @@ if __name__ == '__main__':
         state_machine(question, traj)
 
     elif int(question) == 5:
-        traj = [ [0,0,1,0], [0,0,0.1,0], 5, 100]
+        traj = [ [0,0,0.05,0], [0,0,0.1,0], 5, 100]
         question = 4
         state_machine(question, traj)
