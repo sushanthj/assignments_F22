@@ -27,7 +27,16 @@ Q2.2: Seven Point Algorithm for calculating the fundamental matrix
     (6) Unscale the fundamental matrixes and return as Farray
 '''
 def sevenpoint(pts1, pts2, M):
+    """
+    Seven Point Algorithm to calculate fundamental matrix
+    Args:
+        pts1 : pts1, 7x2 Matrix containing the corresponding points from image1
+        pts2 : pts2, 7x2 Matrix containing the corresponding points from image2
+        M    : M, a scalar parameter computed as max (imwidth, imheight)
 
+    Returns:
+        Farray : Array containing two fundamental matrices
+    """
     Farray = []
     
     x1, x2 = pts1, pts2
@@ -40,7 +49,6 @@ def sevenpoint(pts1, pts2, M):
     print("F2 is \n", F2)
     F_mat = [F1, F2]
     
-    # TODO: FIND THE COEFFS
     # create a function to map the polynomial to solve: [det(a*F1 + (1-a)*F2] = [ alpha*(a**3) + beta*(a**2) + gamma(a) + delta ]
     coeffs = lambda a: np.linalg.det(a*F1 + (a-1)*F2)
 

@@ -130,7 +130,7 @@ if __name__ == "__main__":
                         np.max([*im1.shape, *im2.shape])
                         )
 
-    # displayEpipolarF(im1, im2, F)
+    displayEpipolarF(im1, im2, F)
 
     # Simple Tests to verify your implementation:
     print("pts shape is", pts1.shape)

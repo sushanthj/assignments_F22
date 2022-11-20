@@ -12,3 +12,11 @@
 3. Using Powell the error was at 10.54 (computed very quickly as well ~ 2.9s)
 4. Using L-BFGS-B, the error was 57.64
 5. Using TNC, the error was 10.55 but it took too long (33.8s)
+
+
+## Ransac tuning
+
+1. At tol=18 and iters=500, 109 inliers were found and F was good
+2. At tol=10 and iters=500, 109 inliers F was good
+3. At tol=10 and iters=200, 109 inlers and F was good
+4. 

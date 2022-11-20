@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:pStyle w:val="code"/></w:pPr><w:r><w:t><![CDATA[% data loaded from calibration file 
+% t_groundtruth
+%t_y
+%q_groundTruth
+%y
+%u
+%S=load("calibration.mat");
+%[t_groundtruth,t_y,q_groundTruth,y,u]=deal(S.t_groundtruth,S.t_y,S.q_groundTruth,S.y,S.u);
+load calibration.mat t_y q_groundTruth t_groundTruth u y 
+
+q_gps = zeros(3,250)
+n = size(t_groundTruth,2); %for 1b
+%n = size(t,2); % for 1C
+count =1
+for time = 1:1:n
+    r = rem(time,10);
+    if r == 0
+    q_gps(:,count) = q_groundTruth(:,time);
+    count = count +1;
+    end
+    
+end
+% y[k] = q[k] + W[k] => W[k]=y[k]-q[k]
+w = y - q_gps(1:2,:);
+W = cov(transpose(w))
+]]></w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="text"/><w:jc w:val="left"/></w:pPr><w:r><w:t>finding V</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="code"/></w:pPr><w:r><w:t><![CDATA[T = 0.01;
+q = q_groundTruth;
+
+for k=1:1:n-1
+    F = [1 0 -T*(u(1,k))*sin(q(3,k));
+        0 1 T*(u(1,k))*cos(q(3,k));
+        0 0 1];
+    G = [T*cos(q(3,k)) 0;
+        T*sin(q(3,k)) 0;
+        0 T];
+    gamma = [T*cos(q(3,k)) 0;
+        T*sin(q(3,k)) 0;
+        0 T];
+    q_next = [q(1,k+1);q(2,k+1);q(3,k+1)];
+    q_k = [q(1,k);q(2,k);q(3,k)];
+    u_k = [u(1,k);u(2,k)];
+    
+    
+    v(:,k+1) = gamma\(q_next - F*q_k - G*u_k); 
+
+end
+V = cov(transpose(v))
+]]></w:t></w:r></w:p></w:body></w:document>

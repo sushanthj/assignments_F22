@@ -50,19 +50,19 @@ Q5.1: RANSAC method.
     (4) You can increase the nIters to bigger/smaller values
  
 '''
-def ransacF(pts1, pts2, M, im1, im2, nIters=500, tol=18):
+def ransacF(pts1, pts2, M, im1, im2, nIters=100, tol=10):
     """
-    Every iteration we init a Homography matrix using 4 corresponding
+    Every iteration we init a Fundamental matrix using 4 corresponding
     points and calculate number of inliers. Finally use the Homography
     matrix which had max number of inliers (and these inliers as well)
-    to find the final Homography matrix
+    to find the final Fundamental matrix
     Args:
         pts1: location of matched points in image1
         pts2: location of matched points in image2
         opts: user inputs used for distance tolerance in ransac
 
     Returns:
-        bestH2to1     : The homography matrix with max number of inliers
+        bestH2to1     : The Fundamental matrix with max number of inliers
         inlier_points : Final list of inliers found for best RANSAC iteration
     """
     max_iters = nIters # the number of iterations to run RANSAC for
