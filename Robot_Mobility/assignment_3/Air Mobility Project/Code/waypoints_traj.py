@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def lookup_waypoints(question):
     '''
@@ -26,14 +27,20 @@ def lookup_waypoints(question):
         return([waypoints, waypoint_times, const_acc])
     
     elif int(question) == 3:
-        # space out waypoints to 1cm between each (final dest is 1m)
-        z_vals_tkoff = np.arange(start=0, stop=1, step=0.01)
-        z_vals_land = np.arange(start=1, stop=0, step=-0.01)
-        z_vals = np.append(np.append(z_vals_tkoff, z_vals_land), np.zeros(50))
+        const_accel = 0.0784
+        const_acc = None # ignore this
+        waypoint_times = np.arange(0,10.1,0.05)
+        waypoints = np.zeros(shape=(4,waypoint_times.shape[0]))
+        
+        # space out waypoints according to constant accel profile
+        for i in range(math.floor(len(waypoint_times)/2)):
+            waypoints[2,i] = 0.5*const_accel*waypoint_times[i]*waypoint_times[i]
 
-        waypoints = np.array([np.zeros(shape=z_vals.shape), np.zeros(shape=z_vals.shape), z_vals, np.zeros(shape=z_vals.shape)])
-        waypoint_times = np.arange(start=0, stop=25, step=0.1)
-        const_acc = 0.02 # m/s2
+        halfway = waypoint_times[(math.floor(len(waypoint_times)/2))]
+        
+        for i in range(math.floor(len(waypoint_times)/2) - 1): # 4 timesteps are left for robot to stablize in hover
+            waypoints[2,i+math.floor(len(waypoint_times)/2)] = 1 - (0.5 * const_accel * (waypoint_times[(math.floor(len(waypoint_times)/2)) + 1 + i] - halfway)**2)
+
         return([waypoints, waypoint_times, const_acc])
 
 def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_step, const_acc):
@@ -57,7 +64,7 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
     '''
 
     # TO DO:
-    if int(question) == 2:
+    if int(question) == 2 or int(question) == 3:
         # sample code for hover trajectory
         trajectory_state = np.zeros((15, max_iteration))
         # height of 15 for: [x, y, z, xdot, ydot, zdot, phi, theta, psi, phidot, thetadot, psidot, xacc, yacc, zacc]
@@ -72,39 +79,39 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
             trajectory_state[0:3, i] = waypoints[0:3, current_waypoint_number]
             trajectory_state[8,i] = waypoints[3, current_waypoint_number]
 
-    elif int(question) == 3:
-        trajectory_state = np.zeros((15, max_iteration))
-        current_waypoint_number = 0
-        z_vel = 0
+    # elif int(question) == 3:
+    #     trajectory_state = np.zeros((15, max_iteration))
+    #     current_waypoint_number = 0
+    #     z_vel = 0
 
-        # update the curr_waypoint_number depending on simulation iteration time
-        for i in range(0,max_iteration):
-            if current_waypoint_number < len(waypoint_times)-1:
-                if (i*time_step) >= waypoint_times[current_waypoint_number+1]:
-                    current_waypoint_number +=1
+    #     # update the curr_waypoint_number depending on simulation iteration time
+    #     for i in range(0,max_iteration):
+    #         if current_waypoint_number < len(waypoint_times)-1:
+    #             if (i*time_step) >= waypoint_times[current_waypoint_number+1]:
+    #                 current_waypoint_number +=1
 
-            # update the state's x,y,z values
-            trajectory_state[0:3, i] = waypoints[0:3, current_waypoint_number]
-            # update the state's yaw value
-            trajectory_state[8,i] = waypoints[3, current_waypoint_number]
+    #         # update the state's x,y,z values
+    #         trajectory_state[0:3, i] = waypoints[0:3, current_waypoint_number]
+    #         # update the state's yaw value
+    #         trajectory_state[8,i] = waypoints[3, current_waypoint_number]
 
-            # we create a velocity profile by fixing a constant acceleration
-            # use const_acc from lookup_waypoints
+    #         # we create a velocity profile by fixing a constant acceleration
+    #         # use const_acc from lookup_waypoints
 
-            # const positive accel upwards
-            if current_waypoint_number < 100: #int((len(waypoint_times)-1)/2):
-                # v = u + at
-                z_vel = z_vel + const_acc*time_step
-            elif current_waypoint_number == 100: #int((len(waypoint_times)-1)/2):
-                # v = u + 0t
-                z_vel = z_vel
-            elif (current_waypoint_number > 100) and (current_waypoint_number < 201): #int((len(waypoint_times)-1)/2):
-                # v = u - at
-                z_vel = z_vel - const_acc*time_step
-            else:
-                z_vel = 0
+    #         # const positive accel upwards
+    #         if current_waypoint_number < 100: #int((len(waypoint_times)-1)/2):
+    #             # v = u + at
+    #             z_vel = z_vel + const_acc*time_step
+    #         elif current_waypoint_number == 100: #int((len(waypoint_times)-1)/2):
+    #             # v = u + 0t
+    #             z_vel = z_vel
+    #         elif (current_waypoint_number > 100) and (current_waypoint_number < 201): #int((len(waypoint_times)-1)/2):
+    #             # v = u - at
+    #             z_vel = z_vel - const_acc*time_step
+    #         else:
+    #             z_vel = 0
             
             
-            trajectory_state[5,i] = z_vel
+    #         trajectory_state[5,i] = z_vel
 
     return (trajectory_state)
