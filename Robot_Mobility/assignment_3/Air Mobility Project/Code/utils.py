@@ -170,7 +170,7 @@ def plot_position_3d(state, state_des):
     plt.show()
 
 
-def plot_des_vs_track(state, state_des, time_vec):
+def plot_des_vs_track(state, state_des, time_vec, thrust_array):
         x, y, z = state[0:3]
         phi, theta, psi = state[6:9]
         x_des, y_des, z_des = state_des[0:3]
@@ -209,6 +209,15 @@ def plot_des_vs_track(state, state_des, time_vec):
         vel_track.set(xlabel = 'time(s)')
         vel_track.set(ylabel = 'z_vel (m/s)')
         vel_track.legend()
+
+        if thrust_array is not None:
+                thrust_array = [i/weight for i in thrust_array]
+                thrust_array.append(1)
+                t_by_m = fig.add_subplot(336)
+                t_by_m.plot(time_vec, thrust_array, label='thrust/mass')
+                t_by_m.set(xlabel = 'time(s)')
+                t_by_m.set(ylabel = 'thrust/mass')
+                t_by_m.legend()
 
         plt.suptitle('Desired vs Actual Pose')
         plt.show()

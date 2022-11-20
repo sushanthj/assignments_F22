@@ -19,6 +19,8 @@ from copy import deepcopy
 from utils import plot_state_error, plot_position_3d, plot_des_vs_track
 from waypoints_traj import lookup_waypoints, trajectory_planner
 
+thrust_array = []
+
 def position_controller(current_state,desired_state,params,question, time_step):
     '''
     Input parameters:
@@ -418,6 +420,7 @@ def main(question):
         
         # Motor model
         F_actual, M_actual, rpm_motor_dot = motor_model(F,M,current_state,params)
+        thrust_array.append(F_actual)
         
         # Get the change in state from the quadrotor dynamics
         time_int = tuple((time_vec[i],time_vec[i+1]))
@@ -446,7 +449,7 @@ def main(question):
     plot_position_3d(actual_state_matrix,actual_desired_state_matrix)
 
     # plot desired pose vs actual pose
-    plot_des_vs_track(actual_state_matrix, actual_desired_state_matrix, time_vec)
+    plot_des_vs_track(actual_state_matrix, actual_desired_state_matrix, time_vec, thrust_array)
         
         
 if __name__ == '__main__':
