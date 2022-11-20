@@ -79,39 +79,4 @@ def trajectory_planner(question, waypoints, max_iteration, waypoint_times, time_
             trajectory_state[0:3, i] = waypoints[0:3, current_waypoint_number]
             trajectory_state[8,i] = waypoints[3, current_waypoint_number]
 
-    # elif int(question) == 3:
-    #     trajectory_state = np.zeros((15, max_iteration))
-    #     current_waypoint_number = 0
-    #     z_vel = 0
-
-    #     # update the curr_waypoint_number depending on simulation iteration time
-    #     for i in range(0,max_iteration):
-    #         if current_waypoint_number < len(waypoint_times)-1:
-    #             if (i*time_step) >= waypoint_times[current_waypoint_number+1]:
-    #                 current_waypoint_number +=1
-
-    #         # update the state's x,y,z values
-    #         trajectory_state[0:3, i] = waypoints[0:3, current_waypoint_number]
-    #         # update the state's yaw value
-    #         trajectory_state[8,i] = waypoints[3, current_waypoint_number]
-
-    #         # we create a velocity profile by fixing a constant acceleration
-    #         # use const_acc from lookup_waypoints
-
-    #         # const positive accel upwards
-    #         if current_waypoint_number < 100: #int((len(waypoint_times)-1)/2):
-    #             # v = u + at
-    #             z_vel = z_vel + const_acc*time_step
-    #         elif current_waypoint_number == 100: #int((len(waypoint_times)-1)/2):
-    #             # v = u + 0t
-    #             z_vel = z_vel
-    #         elif (current_waypoint_number > 100) and (current_waypoint_number < 201): #int((len(waypoint_times)-1)/2):
-    #             # v = u - at
-    #             z_vel = z_vel - const_acc*time_step
-    #         else:
-    #             z_vel = 0
-            
-            
-    #         trajectory_state[5,i] = z_vel
-
     return (trajectory_state)
