@@ -17,27 +17,27 @@ def lookup_waypoints(question):
 
     # TO DO:
 
-    # # sample waypoints for hover trajectory 
-    # if int(question) == 2:
-    #     # waypoints = [x_vals],[y_vals],[z_vals],[yaw_vals]
-    #     waypoints = np.array([[0, 0.1, 0.2, 0.3],
-    #                           [0, 0, 0, 0], 
-    #                           [0.5, 0.5, 0.5, 0.5], 
-    #                           [0,0,0,0]])
-    #     waypoint_times = np.array([0,2,4,6])
-    #     const_acc = None
-    #     return([waypoints, waypoint_times, const_acc])
-
+    # sample waypoints for hover trajectory 
     if int(question) == 2:
         # waypoints = [x_vals],[y_vals],[z_vals],[yaw_vals]
-        waypoints = np.array([[0, 0, 0, 0],
+        waypoints = np.array([[0, 0.1, 0.2, 0.3],
                               [0, 0, 0, 0], 
-                              [0.05, 0.1, 0.1, 0.1],
-                              [0,0,0,0]]) 
-                            #   [0,0.261,0.261,0.261]])
-        waypoint_times = np.array([0,4,8,10])
+                              [0.5, 0.5, 0.5, 0.5], 
+                              [0,0,0,0]])
+        waypoint_times = np.array([0,2,4,6])
         const_acc = None
         return([waypoints, waypoint_times, const_acc])
+
+    # if int(question) == 2:
+    #     # waypoints = [x_vals],[y_vals],[z_vals],[yaw_vals]
+    #     waypoints = np.array([[0, 0, 0, 0],
+    #                           [0, 0, 0, 0], 
+    #                           [0.05, 0.1, 0.1, 0.1],
+    #                           [0,0,0,0]]) 
+    #                         #   [0,0.261,0.261,0.261]])
+    #     waypoint_times = np.array([0,4,8,10])
+    #     const_acc = None
+    #     return([waypoints, waypoint_times, const_acc])
     
     elif int(question) == 3:
         # space out waypoints to 1cm between each (final dest is 1m)
