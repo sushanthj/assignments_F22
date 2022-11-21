@@ -21,8 +21,8 @@ def lookup_waypoints(question):
     # sample waypoints for hover trajectory 
     if int(question) == 2:
         # waypoints = [x_vals],[y_vals],[z_vals],[yaw_vals]
-        waypoints = np.array([[0, 0.1, 0.2, 0.3],[0, 0, 0, 0], [0.5, 0.5, 0.5, 0.5], [0,0,0,0]])
-        waypoint_times = np.array([0,2,4,6])
+        waypoints = np.array([[0, 0, 0, 0],[0, 0, 0, 0], [0, 0.05, 0.1, 0.1], [0,0,0,0]])
+        waypoint_times = np.array([0,1,4,8])
         const_acc = None
         return([waypoints, waypoint_times, const_acc])
     
