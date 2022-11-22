@@ -244,7 +244,7 @@ def plot_3d_keypoint_video(pts_3d_video):
 if __name__ == "__main__":
          
     pts_3d_video = []
-    for loop in range(1):
+    for loop in range(10):
         print(f"processing time frame - {loop}")
 
         data_path = os.path.join('data/q6/','time'+str(loop)+'.npz')
@@ -285,10 +285,11 @@ if __name__ == "__main__":
         P_final = x_optimized
         P_shape_req = int(P_final.shape[0]/3)
         P_final = np.reshape(P_final, newshape=(P_shape_req,3))
-        # plot_3d_keypoint(P_final)
+        plot_3d_keypoint(P_final)
         pts_3d_video.append(P_final)
+        visualize_keypoints(im1, pts1, Threshold=200)
     
-    # plot_3d_keypoint_video(pts_3d_video)
+    plot_3d_keypoint_video(pts_3d_video)
     out_dir = "/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_4/code/outputs"
     check_and_create_directory(out_dir, create=1)
     np.savez_compressed(
