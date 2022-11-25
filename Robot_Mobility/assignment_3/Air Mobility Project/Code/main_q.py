@@ -83,15 +83,21 @@ def position_controller(current_state,desired_state,params,question, time_step):
     
     des_acc = np.array(([x_dot_dot],[y_dot_dot],[z_dot_dot]))
 
-    print("desired accels are \n", des_acc)
-    print("error in xyz accels are \n", err_xyz)
+    # print("desired accels are \n", des_acc)
+    # print("error in xyz accels are \n", err_xyz)
 
 
     # find the rotation matrix to map thrust to body frame
     # Rx(phi), Ry(thetha), Rz(psi)
-    Rx = np.array(([1,0,0],[0, np.cos(phi), -np.sin(phi)],[0, np.sin(phi), np.cos(phi)]))
-    Ry = np.array(([np.cos(thetha), 0, np.sin(thetha)], [0,1,0], [-np.sin(thetha), 0, np.cos(thetha)]))
-    Rz = np.array(([np.cos(phi), -np.sin(phi), 0],[np.sin(phi), np.cos(phi), 0], [0,0,1]))
+    Rx = np.array(([1,0,0],
+                   [0, np.cos(phi), -np.sin(phi)],
+                   [0, np.sin(phi), np.cos(phi)]))
+    Ry = np.array(([np.cos(thetha), 0, np.sin(thetha)], 
+                   [0,1,0], 
+                   [-np.sin(thetha), 0, np.cos(thetha)]))
+    Rz = np.array(([np.cos(psi), -np.sin(psi), 0],
+                   [np.sin(psi), np.cos(psi), 0], 
+                   [0,0,1]))
 
     R_eb = Rz @ (Ry @ Rx)
     # R_be = R_eb.T
@@ -99,7 +105,7 @@ def position_controller(current_state,desired_state,params,question, time_step):
     gravity_vec = np.array(([0],[0],[params["gravity"]]))
     
     thrust = params["mass"]*(np.array(([0,0,1])) @ (gravity_vec + des_acc + err_xyz))
-    print("thrust was", thrust[0])
+    # print("thrust was", thrust[0])
 
     return thrust, des_acc + err_xyz, R_eb
 
@@ -191,7 +197,7 @@ def attitude_controller(params, current_state,desired_state,question):
     Kpphi = 190
     Kdphi = 30
 
-    Kptheta = 198
+    Kptheta = 190
     Kdtheta = 30
 
     Kppsi = 80
@@ -207,7 +213,7 @@ def attitude_controller(params, current_state,desired_state,question):
     phi_dot, thetha_dot, psi_dot = current_state["omega"]
     phi_dot_des, thetha_dot_des, psi_dot_des = desired_state["omega"]
 
-    if int(question) == 2 or int(question) == 3:
+    if True:
         zeroth_order_error = np.array((
                                        [phi - phi_des],
                                        [thetha - thetha_des],
@@ -437,7 +443,6 @@ def main(question, state_descp):
 
     #? the quad is assumed to be at 0.5?
     actual_state_matrix[:,0] = np.vstack((state[0:12], np.array([[0],[0],[0]])))[:,0]
-
     
     #Create a matrix to hold the actual desired state at each time step
 
