@@ -1,0 +1,162 @@
+% This LaTeX was auto-generated from MATLAB code.
+% To make changes, update the MATLAB code and export to LaTeX again.
+
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{epstopdf}
+\usepackage[table]{xcolor}
+\usepackage{matlab}
+
+\sloppy
+\epstopdfsetup{outdir=./}
+\graphicspath{ {./sush_1_b_images/} }
+
+\begin{document}
+
+\matlabtitle{Problem Set 3: Manipulation Estimation and Control}
+
+\matlabheading{1. Dead Reckoning and Kalman Filter}
+
+
+\vspace{1em}
+\matlabheadingtwo{1. a. linearized approximation of the system as a function of the current state}
+
+
+\vspace{1em}
+\begin{par}
+\begin{flushleft}
+\includegraphics[width=\maxwidth{68.13848469643753em}]{image_0}
+\end{flushleft}
+\end{par}
+
+
+\vspace{1em}
+\begin{par}
+\begin{flushleft}
+\includegraphics[width=\maxwidth{68.03813346713497em}]{image_1}
+\end{flushleft}
+\end{par}
+
+\begin{par}
+\begin{flushleft}
+\includegraphics[width=\maxwidth{69.24234821876568em}]{image_2}
+\end{flushleft}
+\end{par}
+
+\begin{par}
+\begin{flushleft}
+\includegraphics[width=\maxwidth{69.34269944806825em}]{image_3}
+\end{flushleft}
+\end{par}
+
+
+\vspace{1em}
+
+\vspace{1em}
+\matlabheadingtwo{1. b. Estimation of Covariance Matrix for process and measurement noise}
+
+\begin{matlabcode}
+% import the calibrate.mat file to get:
+% Train time params
+% - t_groundtruth (absolute time values)
+% - q_groundtruth (robot states at the above mentioned time values)
+% - u (inputs to robot at time values without any noise)
+% 
+% Test time values
+% - t_y (a vector of times associated with the GPS measurement)
+% - y (noisy GPS measurements taken at the times in t y)
+
+load CMU/Assignment_Sem_1/MEC/Assignment_3/'Problem1 (EKF)'/calibration.mat
+\end{matlabcode}
+
+
+\vspace{1em}
+\begin{par}
+\begin{flushleft}
+The error between noisy measurement from actual sensor and groundtruth is recorded. This is then used to calculate the covariance of the measurement noise. 
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+% get length of time vector
+time_duration = size(t_groundTruth,2);
+
+% create a dummy array which will hold the error values
+measure_errors = zeros(2,250);
+
+for t = 1:time_duration
+    if mod(t,10) == 0
+        time = t/10;
+        measure_errors(:,time) = (y(:,time) - q_groundTruth(1:2,t));
+    end
+end
+
+W = cov(measure_errors.')
+\end{matlabcode}
+\begin{matlaboutput}
+W = 2x2    
+    1.8817    0.0632
+    0.0632    2.1384
+
+\end{matlaboutput}
+
+
+\vspace{1em}
+\begin{par}
+\begin{flushleft}
+To calculate the process noise, we use the linearized system model derived in \textbf{1.a.}
+\end{flushleft}
+\end{par}
+
+\begin{par}
+\begin{flushleft}
+\textbf{\textless{}INSERT 1.a. equation\textgreater{}}
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+% create a dummy array which will hold the error values
+process_errors = zeros(2,2500);
+timestep = 0.01
+\end{matlabcode}
+\begin{matlaboutput}
+timestep = 0.0100
+\end{matlaboutput}
+\begin{matlabcode}
+
+for t = 1:time_duration-1
+    % time = t/10;
+    
+    % calculate the F matrix:
+    F = [1 0 -timestep*u(1,t)*sin(q_groundTruth(3,t));
+         0 1 timestep*u(1,t)*cos(q_groundTruth(3,t));
+         0 0 1];
+    
+    % calculate the G matrix:
+    G = [timestep*cos(q_groundTruth(3,t))  0;
+         timestep*sin(q_groundTruth(3,t))   0;
+         0                          timestep];
+
+    gamma = G;
+
+    process_errors(:,t) = gamma \ (q_groundTruth(:,t+1) - F*q_groundTruth(:,t) - G*u(:,t));
+end
+
+V = cov(process_errors.')
+\end{matlabcode}
+\begin{matlaboutput}
+V = 2x2    
+    0.2591    0.0010
+    0.0010    0.0625
+
+\end{matlaboutput}
+
+\end{document}
