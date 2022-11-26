@@ -3,6 +3,7 @@
 /assignment_venv
 *.npy
 *.zip
+*.mat
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
