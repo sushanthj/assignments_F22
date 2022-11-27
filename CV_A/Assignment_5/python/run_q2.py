@@ -42,8 +42,8 @@ test = sigmoid(np.array([-1000,1000]))
 print('should be zero and one\t',test.min(),test.max())
 
 # implement forward
-h1 = forward(x,params,'layer1')
-print(h1.shape)
+h1 = forward(x,params,'layer1', sigmoid)
+print("forward shape is",h1.shape)
 
 # Q 2.2.2
 # implement softmax
@@ -59,25 +59,36 @@ loss, acc = compute_loss_and_acc(y, probs)
 # if it is not, check softmax!
 print("{}, {:.2f}".format(loss,acc))
 
-"""
-
+#? TA comments
 # here we cheat for you
 # the derivative of cross-entropy(softmax(x)) is probs - 1[correct actions]
+
+#? My comments
+# derivative in front of (upstream of softmax)
 delta1 = probs - y
 
+#? TA comments
 # we already did derivative through softmax
-# so we pass in a linear_deriv, which is just a vector of ones
-# to make this a no-op
-delta2 = backwards(delta1,params,'output',linear_deriv)
-# Implement backwards!
-backwards(delta2,params,'layer1',sigmoid_deriv)
+# so we pass in a linear_deriv, which is just a vector of ones to make this a no-op
+
+#? My comments
+# basically the derivative w.r.t the softmax function should only return an array of np.ones
+# of the same shape as the post_activation shape of softmax( 40,4) -> this is done by linear_deriv
+
+delta2 = backwards(delta1, params, 'output', linear_deriv)
+print("delta2 shape is", delta2.shape)
+
+delta3 = backwards(delta2,params,'layer1',sigmoid_deriv)
+print("delta3 shape is", delta3.shape)
 
 # W and b should match their gradients sizes
 for k,v in sorted(list(params.items())):
+    print("name  grad_shape ")
     if 'grad' in k:
         name = k.split('_')[1]
         print(name,v.shape, params[name].shape)
 
+"""
 # Q 2.4
 batches = get_random_batches(x,y,5)
 # print batch sizes

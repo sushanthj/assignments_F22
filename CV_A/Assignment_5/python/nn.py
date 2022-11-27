@@ -136,9 +136,17 @@ def backwards(delta,params,name='',activation_deriv=sigmoid_deriv):
     # do the derivative through activation first
     # (don't forget activation_deriv is a function of post_act)
     # then compute the derivative W, b, and X
-    ##########################
-    ##### your code here #####
-    ##########################
+    activation_derivative = activation_deriv(post_act) * delta
+    print("activation derivative shape is",activation_derivative.shape)
+    
+    # we do W*x + b => activation_deriv
+    # Therefore, the sequence of gates are:
+    # multiplication gate -> addition gate -> sigmoid_gate (or softmax)
+    # the addition gate flows equal gradient to grad_b and mutliplication gate 
+    grad_b = activation_derivative
+
+    grad_W = X.T @ activation_derivative
+    grad_X = activation_derivative @ W.T
 
     # store the gradients
     params['grad_W' + name] = grad_W
