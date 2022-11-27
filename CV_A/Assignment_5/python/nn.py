@@ -156,9 +156,23 @@ def backwards(delta,params,name='',activation_deriv=sigmoid_deriv):
 ############################## Q 2.4 ##############################
 # split x and y into random batches
 # return a list of [(batch1_x,batch1_y)...]
+
+# remember: x = (examples, dimensions)
+#           y = (examples, classes)
+# therefore, we should split data along the rows
+
 def get_random_batches(x,y,batch_size):
     batches = []
-    ##########################
-    ##### your code here #####
-    ##########################
+    print("x and y shape is", x.shape, y.shape)
+    
+    assert x.shape[0] == y.shape[0]
+    p = np.random.permutation(x.shape[0])
+    new_x, new_y =  x[p,:], y[p,:]
+    
+    # Using pre-defined batch size (def = 5) create batches
+    for i in range(int(x.shape[0]/batch_size)):
+        x_batch = new_x[i:i+batch_size,:]
+        y_batch = new_y[i:i+batch_size,:]
+        batches.append((x_batch, y_batch))
+
     return batches

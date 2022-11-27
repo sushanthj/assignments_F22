@@ -82,13 +82,12 @@ delta3 = backwards(delta2,params,'layer1',sigmoid_deriv)
 print("delta3 shape is", delta3.shape)
 
 # W and b should match their gradients sizes
+print("name | grad_shape | weight shape")
 for k,v in sorted(list(params.items())):
-    print("name  grad_shape ")
     if 'grad' in k:
         name = k.split('_')[1]
         print(name,v.shape, params[name].shape)
 
-"""
 # Q 2.4
 batches = get_random_batches(x,y,5)
 # print batch sizes
@@ -123,7 +122,7 @@ for itr in range(max_iters):
     if itr % 100 == 0:
         print("itr: {:02d} \t loss: {:.2f} \t acc : {:.2f}".format(itr,total_loss,avg_acc))
 
-
+"""
 # Q 2.5 should be implemented in this file
 # you can do this before or after training the network. 
 
