@@ -24,6 +24,9 @@ y[np.arange(y_idx.shape[0]),y_idx] = 1
 # parameters in a dictionary
 params = {}
 
+print("STARTING X shape is", x.shape)
+print("STARTING Y shape is", y.shape)
+
 # Q 2.1
 # initialize a layer
 initialize_weights(2,25,params,'layer1')
@@ -57,7 +60,7 @@ print(probs.min(),min(probs.sum(1)),max(probs.sum(1)),probs.shape)
 loss, acc = compute_loss_and_acc(y, probs)
 # should be around -np.log(0.25)*40 [~55] or higher, and 0.25
 # if it is not, check softmax!
-print("{}, {:.2f}".format(loss,acc))
+print("{}, {:.2f} loss and accuracy".format(loss,acc))
 
 #? TA comments
 # here we cheat for you
@@ -88,39 +91,65 @@ for k,v in sorted(list(params.items())):
         name = k.split('_')[1]
         print(name,v.shape, params[name].shape)
 
+#________________________________________________________________________________________#
+
 # Q 2.4
 batches = get_random_batches(x,y,5)
 # print batch sizes
 print([_[0].shape[0] for _ in batches])
 batch_num = len(batches)
 
-# WRITE A TRAINING LOOP HERE
-max_iters = 500
-learning_rate = 1e-3
+######### WRITE A TRAINING LOOP HERE #################
+
+# init weights
+# parameters in a dictionary
+params = {}
+
+# initialize a layer
+initialize_weights(2,25,params,'layer1')
+initialize_weights(25,4,params,'output')
+
+max_iters = 1000
+learning_rate = 0.5e-3
 # with default settings, you should get loss < 35 and accuracy > 75%
 for itr in range(max_iters):
     total_loss = 0
     avg_acc = 0
     for xb,yb in batches:
-        ##########################
-        ##### your code here #####
-        ##########################
-        pass
-        # forward
+
+        # implement forward
+        h1 = forward(xb,params,'layer1', sigmoid)
+
+        # implement softmax
+        probs = forward(h1,params,'output',softmax)
+        # print(probs.min(),min(probs.sum(1)),max(probs.sum(1)),probs.shape)
 
         # loss
-        # be sure to add loss and accuracy to epoch totals 
+        loss, acc = compute_loss_and_acc(yb, probs)
+        total_loss += loss
+        avg_acc += acc
+        # print("{}, {:.2f}".format(loss,acc))
 
         # backward
+        delta1 = probs - yb
+
+        delta2 = backwards(delta1, params, 'output', linear_deriv)
+
+        delta3 = backwards(delta2,params,'layer1',sigmoid_deriv)
+
 
         # apply gradient 
         # gradients should be summed over batch samples
+        for k,v in sorted(list(params.items())):
+            if 'grad' in k:
+                name = k.split('_')[1]
+                # print(name,v.shape, params[name].shape)
+                params[name] -= learning_rate * v
 
-        
-
-        
+    avg_acc = avg_acc/len(batches)    
     if itr % 100 == 0:
         print("itr: {:02d} \t loss: {:.2f} \t acc : {:.2f}".format(itr,total_loss,avg_acc))
+
 
 """
 # Q 2.5 should be implemented in this file
