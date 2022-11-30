@@ -154,6 +154,7 @@ def main():
     print('total {:.2e}'.format(total_error))
 
 
+
 def grad_check_loop(params, eps, x, y):
     for k,v in params.items():
         if '_' in k: 
@@ -165,6 +166,7 @@ def grad_check_loop(params, eps, x, y):
     probs = forward(h1,params,'output',softmax)
     loss, acc = compute_loss_and_acc(y, probs)
     return loss, params
+
 
 
 def train_loop(batches):
