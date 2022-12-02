@@ -28,9 +28,10 @@ class SushNet(nn.Module):
         self.fc2 = nn.Linear(self.layer2_shape[0], self.layer2_shape[1])
 
     def forward(self, x):
-        x = F.sigmoid(self.fc1(x))
-        x = F.softmax(self.fc2(x))
+        x = torch.sigmoid(self.fc1(x))
+        print(self.fc2(x).size())
+        x = F.softmax(self.fc2(x), dim=1)
         return x
     
     # Backward function doesn't need explicit functions, Autograd will pick up
-    # required gradients for each layer on its own
+    # required gradients for each layer on its owns

@@ -41,9 +41,8 @@ def main():
 
     max_iters = 5
     # pick a batch size, learning rate
-    batch_size = 100
-    learning_rate = 0.15e-3
-    hidden_size = 64
+    batch_size = 1080
+    learning_rate = 0.1e-3
 
     # initialize your custom dataset to be used with the dataloader
     train_dataset = TensorDataset(train_xt, train_yt)
@@ -51,15 +50,15 @@ def main():
     test_dataset = TensorDataset(test_xt, test_yt)
 
     # create dataloader objects for each of the above datasets
-    train_loader = DataLoader(train_dataset, batch_size=108, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_dataset, batch_size=108, shuffle=True, num_workers=4)
-    test_loader = DataLoader(test_dataset, batch_size=108, shuffle=True, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
     net = SushNet()
     net.to(device)
     
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
 
     # iterate over epochs (max_iters = epochs)
     for epoch in range(max_iters):  # loop over the dataset multiple times
@@ -68,6 +67,8 @@ def main():
         for i, data in enumerate(train_loader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data[0].to(device), data[1].to(device)
+            inputs = inputs.to(torch.float32)
+            labels = labels.to(torch.float32)
 
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -80,7 +81,7 @@ def main():
 
             # print statistics
             running_loss += loss.item()
-            if i % 2000 == 1999:    # print every 2000 mini-batches
+            if i % 2 == 0:    # print every 2000 mini-batches
                 print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.3f}')
                 running_loss = 0.0
 
@@ -90,8 +91,12 @@ def main():
     PATH = './sush_net.pth'
     torch.save(net.state_dict(), PATH)
 
+    
+    
+    # reload the network to measure test accuracy
     net = SushNet()
     net.load_state_dict(torch.load(PATH))
+    net.to(device)
 
     
     # Run Validation Accuracy pass
@@ -100,9 +105,11 @@ def main():
     # since we're not training, we don't need to calculate the gradients for our outputs
     with torch.no_grad():
         for data in val_loader:
-            images, labels = data
+            inputs, labels = data[0].to(device), data[1].to(device)
+            inputs = inputs.to(torch.float32)
+            labels = labels.to(torch.float32)
             # calculate outputs by running images through the network
-            outputs = net(images)
+            outputs = net(inputs)
             # the class with the highest energy is what we choose as prediction
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
@@ -118,9 +125,11 @@ def main():
     # since we're not training, we don't need to calculate the gradients for our outputs
     with torch.no_grad():
         for data in val_loader:
-            images, labels = data
+            inputs, labels = data[0].to(device), data[1].to(device)
+            inputs = inputs.to(torch.float32)
+            labels = labels.to(torch.float32)
             # calculate outputs by running images through the network
-            outputs = net(images)
+            outputs = net(inputs)
             # the class with the highest energy is what we choose as prediction
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
