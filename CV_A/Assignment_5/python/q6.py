@@ -39,10 +39,10 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     print(device)
 
-    max_iters = 5
+    max_iters = 50
     # pick a batch size, learning rate
-    batch_size = 1080
-    learning_rate = 0.1e-3
+    batch_size = 100
+    learning_rate = 1e-3
 
     # initialize your custom dataset to be used with the dataloader
     train_dataset = TensorDataset(train_xt, train_yt)
@@ -58,7 +58,7 @@ def main():
     net.to(device)
     
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
+    optimizer = optim.SGD(net.parameters(), lr=learning_rate)
 
     # iterate over epochs (max_iters = epochs)
     for epoch in range(max_iters):  # loop over the dataset multiple times
@@ -104,20 +104,33 @@ def main():
     total = 0
     # since we're not training, we don't need to calculate the gradients for our outputs
     with torch.no_grad():
-        for data in val_loader:
-            inputs, labels = data[0].to(device), data[1].to(device)
-            inputs = inputs.to(torch.float32)
-            labels = labels.to(torch.float32)
-            # calculate outputs by running images through the network
-            outputs = net(inputs)
-            # the class with the highest energy is what we choose as prediction
-            #! FIX THIS (change back to numpy array and try)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+        inputs, labels = val_xt.to(device), val_yt.to(device)
+        inputs = inputs.to(torch.float32)
+        labels = labels.to(torch.float32)
+        
+        # calculate outputs by running images through the network
+        outputs = net(inputs)
+        outputs = outputs.cpu()
+        # the class with the highest energy is what we choose as prediction
+        
+        #! FIX THIS (change back to numpy array and try)
+        nump_outputs = outputs.numpy()
+        print("outputs shape is", nump_outputs.shape)
 
-    print(f'Validation Accuracy of the network on the 10000 test images: \
-            {100 * correct // total} %')
+        labels = labels.cpu()
+        nump_lables = labels.numpy()
+        print("labels size is", labels.shape)
+
+        loss, acc = compute_loss_and_acc(nump_labels, nump_outputs)
+        print("Validation Loss is", loss)
+        print("Validation Accuracy is", acc)
+
+        # _, predicted = torch.max(outputs.data, 1)
+        # total += labels.size(0)
+        # correct += (predicted == labels).sum().item()
+
+    # print(f'Validation Accuracy of the network on the 10000 test images: \
+    #         {100 * correct // total} %')
     
     
     # Run Test Accuracy pass

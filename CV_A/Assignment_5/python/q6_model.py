@@ -30,7 +30,6 @@ class SushNet(nn.Module):
     def forward(self, x):
         x = torch.sigmoid(self.fc1(x))
         x = F.softmax(self.fc2(x), dim=1)
-        print(x.size())
         return x
     
     # Backward function doesn't need explicit functions, Autograd will pick up

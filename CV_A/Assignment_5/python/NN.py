@@ -99,6 +99,8 @@ def compute_loss_and_acc(y, probs):
 
     # probs is the output of our softmax function
     # we'll define our loss as the -1*(unnormalized log of these probs)
+
+    assert y.shape == probs.shape
     log_probs = y * np.log(probs)
     loss = -(np.sum(log_probs))
 

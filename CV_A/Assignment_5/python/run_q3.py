@@ -70,14 +70,12 @@ def main():
         loss, acc = compute_loss_and_acc(train_y, probs)
         train_loss.append(loss/train_x.shape[0])
         train_acc.append(acc)
-        # print("train accuracy is", acc)
 
         h1 = forward(valid_x,params,'layer1')
         probs = forward(h1,params,'output',softmax)
         loss, acc = compute_loss_and_acc(valid_y, probs)
         valid_loss.append(loss/valid_x.shape[0])
         valid_acc.append(acc)
-        # print("val accuracy is", acc)
 
         total_loss = 0
         avg_acc = 0
