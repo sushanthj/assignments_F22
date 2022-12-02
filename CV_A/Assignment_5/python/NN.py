@@ -165,12 +165,13 @@ def get_random_batches(x,y,batch_size):
     
     assert x.shape[0] == y.shape[0]
     p = np.random.permutation(x.shape[0])
-    new_x, new_y =  x[p,:], y[p,:]
-    
-    # Using pre-defined batch size (def = 5) create batches
-    for i in range(int(x.shape[0]/batch_size)):
-        x_batch = new_x[i:i+batch_size,:]
-        y_batch = new_y[i:i+batch_size,:]
-        batches.append((x_batch, y_batch))
+    shuffled_x, shuffled_y =  x[p,:], y[p,:]
+
+    num_batches = (x.shape[0]/batch_size)
+    x_batches = np.split(shuffled_x, num_batches)
+    y_batches = np.split(shuffled_y, num_batches)
+
+    for xb, yb in zip(x_batches, y_batches):
+        batches.append((xb,yb))
 
     return batches

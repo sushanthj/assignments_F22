@@ -111,6 +111,7 @@ def main():
             # calculate outputs by running images through the network
             outputs = net(inputs)
             # the class with the highest energy is what we choose as prediction
+            #! FIX THIS (change back to numpy array and try)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()

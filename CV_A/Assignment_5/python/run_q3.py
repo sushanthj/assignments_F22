@@ -26,10 +26,10 @@ def main():
             plt.imshow(crop.reshape(32,32).T, cmap="Greys")
             plt.show()
 
-    max_iters = 1
+    max_iters = 100
     # pick a batch size, learning rate
-    batch_size = 1700
-    learning_rate = 0.15e-3
+    batch_size = 100
+    learning_rate = 1e-3
     hidden_size = 64
     ##########################
     ##### your code here #####

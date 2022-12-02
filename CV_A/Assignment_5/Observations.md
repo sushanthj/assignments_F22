@@ -22,4 +22,6 @@ Now, we'll initialize them by sampling random variables from a gaussian distribu
 
 1. http://pytorch-sush.herokuapp.com/
 2. https://stackoverflow.com/questions/44429199/how-to-load-a-list-of-numpy-arrays-to-pytorch-dataset-loader (both answers with TensorDataset and other one will definately be useful)
-3. 
+3. https://pytorch.org/tutorials/beginner/blitz/neural_networks_tutorial.html
+4. https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
+5. https://courses.cs.washington.edu/courses/cse446/19au/section9.html

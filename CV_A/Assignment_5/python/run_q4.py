@@ -12,7 +12,7 @@ import skimage.filters
 import skimage.morphology
 import skimage.segmentation
 
-from nn import *
+from NN import *
 from q4 import *
 # do not include any more libraries here!
 # no opencv, no sklearn, etc!
