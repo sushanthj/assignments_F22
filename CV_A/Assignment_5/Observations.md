@@ -18,3 +18,8 @@ Now, we'll initialize them by sampling random variables from a gaussian distribu
 1. https://towardsdatascience.com/weight-initialization-techniques-in-neural-networks-26c649eb3b78
 2. https://towardsdatascience.com/weight-initialization-in-neural-networks-a-journey-from-the-basics-to-kaiming-954fb9b47c79
 
+## Pytorch
+
+1. http://pytorch-sush.herokuapp.com/
+2. https://stackoverflow.com/questions/44429199/how-to-load-a-list-of-numpy-arrays-to-pytorch-dataset-loader (both answers with TensorDataset and other one will definately be useful)
+3. 

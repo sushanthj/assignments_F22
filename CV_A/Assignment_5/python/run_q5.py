@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.io
-from nn import *
+from NN import *
 from collections import Counter
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import ImageGrid
@@ -47,6 +47,7 @@ for itr in range(max_iters):
         ##########################
         ##### your code here #####
         ##########################
+        pass
         
     
     losses.append(total_loss/train_x.shape[0])

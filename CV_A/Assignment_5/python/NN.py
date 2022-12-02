@@ -13,7 +13,7 @@ def initialize_weights(in_size,out_size,params,name=''):
     Initialize weights according to xavier initialization
 
     Args:
-        in_size (_type_): _description_
+        in_size (_type_): 
         out_size (_type_): _description_
         params (_type_): _description_
         name (str, optional): _description_. Defaults to ''.
@@ -21,8 +21,7 @@ def initialize_weights(in_size,out_size,params,name=''):
     b = np.zeros(out_size)
     W = np.random.randn(in_size, out_size) # since we're doing Wx multiplication
     # we need to ensure the number of columns = number of inputs (i.e. size of x)
-    # however, they will be transposing W to multiply with x later, so here the 
-    # order is switched
+    # however, they will be XW instead of Wx so here the order is switched
     W = W * np.sqrt(2/(in_size+out_size))
 
     params['W' + name] = W

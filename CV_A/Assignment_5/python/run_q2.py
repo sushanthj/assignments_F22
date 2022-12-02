@@ -1,6 +1,6 @@
 import numpy as np
 # you should write your functions in nn.py
-from nn import *
+from NN import *
 from util import *
 
 def main():
