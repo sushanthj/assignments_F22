@@ -73,7 +73,7 @@ def main():
             optimizer.zero_grad()
 
             # forward + backward + optimize
-            outputs = (inputs)
+            outputs = net(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -90,7 +90,44 @@ def main():
     PATH = './sush_net.pth'
     torch.save(net.state_dict(), PATH)
 
+    net = SushNet()
+    net.load_state_dict(torch.load(PATH))
+
     
+    # Run Validation Accuracy pass
+    correct = 0
+    total = 0
+    # since we're not training, we don't need to calculate the gradients for our outputs
+    with torch.no_grad():
+        for data in val_loader:
+            images, labels = data
+            # calculate outputs by running images through the network
+            outputs = net(images)
+            # the class with the highest energy is what we choose as prediction
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    print(f'Validation Accuracy of the network on the 10000 test images: \
+            {100 * correct // total} %')
+    
+    
+    # Run Test Accuracy pass
+    correct = 0
+    total = 0
+    # since we're not training, we don't need to calculate the gradients for our outputs
+    with torch.no_grad():
+        for data in val_loader:
+            images, labels = data
+            # calculate outputs by running images through the network
+            outputs = net(images)
+            # the class with the highest energy is what we choose as prediction
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    print(f'Test Accuracy of the network on the 10000 test images: \
+            {100 * correct // total} %')
 
     #? PLOT CONFUSION MATRIX, TRAIN and VAL accuracy with time
     #? PRINT TEST ACCURACY

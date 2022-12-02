@@ -93,7 +93,9 @@ for i, ax in enumerate(grid):
     if i % 2 == 0:
         ax.imshow(visualize_x[i//2].reshape((32, 32)).T, cmap="Greys")
     else:
-        ax.imshow(reconstructed_x[i//2].reshape((32, 32)).T, cmap="Greys")
+        pass
+        # ax.imshow(reconstructed_x[i//2].reshape((32, 32)).T, cmap="Greys") # uncomment 
+        # during devel
     ax.set_axis_off()
 plt.show()
 
