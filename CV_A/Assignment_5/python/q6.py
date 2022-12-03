@@ -12,7 +12,12 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 from NN import *
 from torch.utils.data import TensorDataset, DataLoader
 
+from torch.utils.tensorboard import SummaryWriter
+
 def main():
+
+    # default `log_dir` is "runs" - we'll be more specific here
+    writer = SummaryWriter('runs/fashion_mnist_experiment_1')
 
     train_data = scipy.io.loadmat('../data/nist36_train.mat')
     valid_data = scipy.io.loadmat('../data/nist36_valid.mat')
@@ -59,7 +64,7 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     print(device)
 
-    max_iters = 50
+    max_iters = 5
     # pick a batch size, learning rate
     batch_size = 100
     learning_rate = 1e-3
@@ -76,7 +81,7 @@ def main():
 
     net = SushNet()
     net.to(device)
-    net.train()
+
     # criterion = nn.CrossEntropyLoss()
     criterion = nn.NLLLoss()
     optimizer = optim.Adam(net.parameters(), lr=learning_rate)
@@ -98,23 +103,34 @@ def main():
 
             # forward + backward + optimize
             outputs = net(inputs)
-            # print("labels shape is", labels.shape)
-            # print("outputs shape is", outputs.shape)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
 
             # print statistics
             running_loss += loss.item()
-            if i % 2 == 0:    # print every 2000 mini-batches
-                # print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.3f}')
+            if i % 20 == 0:    # print every 200 mini-batches
+                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 20:.3f}')
+                
+                # ...log the running loss
+                writer.add_scalar('training loss',
+                                running_loss / 20,
+                                epoch * len(train_loader) + i)
                 running_loss = 0.0
 
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
 
-        print("Train accuracy for this epoch ", (100 * correct // total))
+                print(f"traning accuracy for epoch {epoch} and batch {i} is {(100 * correct // total)}")\
+                
+                # ...log the running loss
+                writer.add_scalar('training accuracy',
+                                 (100 * correct // total),
+                                epoch * len(train_loader) + i)
+                running_loss = 0.0
+
+
 
     print('Finished Training')
 
@@ -163,9 +179,9 @@ def main():
     with torch.no_grad():
         inputs, labels = val_xt.to(device), val_yt.to(device)
         inputs = inputs.to(torch.float32)
-        labels = labels.to(torch.float32)
+        # labels = labels.to(torch.float32)
         
-        # calculate outputs by running images through the network
+        # calculate correct label predictions
         outputs = net(inputs)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
@@ -181,7 +197,7 @@ def main():
     with torch.no_grad():
         inputs, labels = test_xt.to(device), test_yt.to(device)
         inputs = inputs.to(torch.float32)
-        labels = labels.to(torch.float32)
+        # labels = labels.to(torch.float32)
         
         # calculate outputs by running images through the network
         outputs = net(inputs)
@@ -208,6 +224,39 @@ def compute_loss_and_acc(y, probs):
 
     return loss, acc 
 
+
+def images_to_probs(net, images):
+    '''
+    Generates predictions and corresponding probabilities from a trained
+    network and a list of images
+    '''
+    output = net(images)
+    # convert output probabilities to predicted class
+    _, preds_tensor = torch.max(output, 1)
+    preds = np.squeeze(preds_tensor.numpy())
+    return preds, [F.softmax(el, dim=0)[i].item() for i, el in zip(preds, output)]
+
+
+def plot_classes_preds(net, images, labels):
+    '''
+    Generates matplotlib Figure using a trained network, along with images
+    and labels from a batch, that shows the network's top prediction along
+    with its probability, alongside the actual label, coloring this
+    information based on whether the prediction was correct or not.
+    Uses the "images_to_probs" function.
+    '''
+    preds, probs = images_to_probs(net, images)
+    # plot the images in the batch, along with predicted and true labels
+    fig = plt.figure(figsize=(12, 48))
+    for idx in np.arange(4):
+        ax = fig.add_subplot(1, 4, idx+1, xticks=[], yticks=[])
+        matplotlib_imshow(images[idx], one_channel=True)
+        ax.set_title("{0}, {1:.1f}%\n(label: {2})".format(
+            classes[preds[idx]],
+            probs[idx] * 100.0,
+            classes[labels[idx]]),
+                    color=("green" if preds[idx]==labels[idx].item() else "red"))
+    return fig
 
 if __name__ == '__main__':
     main()
