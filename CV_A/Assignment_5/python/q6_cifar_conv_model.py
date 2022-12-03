@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class SushConvNet(nn.Module):
+class SushConvNet_CIFAR(nn.Module):
 
     def __init__(self):
         # inherit the necessary superclass
@@ -19,8 +19,8 @@ class SushConvNet(nn.Module):
         # here too the weights will have a size which maps the hidden layer
         # to the output layer. The weights shape will be (hidden_size, 36)
         # where 36 = number of total possible labels
-        self.layer1_shape = (400, 64)
-        self.layer2_shape = (64, 36)
+        self.layer1_shape = (400, 200)
+        self.layer2_shape = (200, 100)
 
         # Define Operations
         # conv operations

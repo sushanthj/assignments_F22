@@ -18,7 +18,7 @@ from torch.utils.tensorboard import SummaryWriter
 def main():
 
     # default `log_dir` is "runs" - we'll be more specific here
-    writer = SummaryWriter('runs/fashion_mnist_experiment_1')
+    writer = SummaryWriter('runs/mnist')
 
     train_data = scipy.io.loadmat('../data/nist36_train.mat')
     valid_data = scipy.io.loadmat('../data/nist36_valid.mat')
