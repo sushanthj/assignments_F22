@@ -6,7 +6,7 @@ class SushNet(nn.Module):
 
     def __init__(self):
         # inherit the necessary superclass
-        super(SushNet, self).__init__()
+        super().__init__()
         
         # initialize layers
 
@@ -29,7 +29,7 @@ class SushNet(nn.Module):
 
     def forward(self, x):
         x = torch.sigmoid(self.fc1(x))
-        x = F.softmax(self.fc2(x), dim=1)
+        x = F.log_softmax(self.fc2(x), dim=1)
         return x
     
     # Backward function doesn't need explicit functions, Autograd will pick up
