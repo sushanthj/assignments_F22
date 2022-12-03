@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import torch
 import torchvision
 from q6_model import SushNet
+from q6_conv_model import SushConvNet
 import torch.optim as optim
 import torch.nn as nn
 
@@ -79,7 +80,8 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-    net = SushNet()
+    # net = SushNet()
+    net = SushConvNet()
     net.to(device)
 
     # criterion = nn.CrossEntropyLoss()
@@ -141,7 +143,8 @@ def main():
     
     
     # reload the network to measure test accuracy
-    net = SushNet()
+    # net = SushNet()
+    net = SushConvNet()
     net.load_state_dict(torch.load(PATH))
     net.to(device)
 
@@ -172,7 +175,7 @@ def main():
         print("Validation Accuracy is", acc)
     """
     
-    # Run Validation Accuracy Pass
+    #=========================== Run Validation Accuracy Pass ==========================
     correct = 0
     total = 0
     # since we're not training, we don't need to calculate the gradients for our outputs
@@ -190,7 +193,7 @@ def main():
     print("Validation accuracy is", (100 * correct // total))
 
     
-    # Run Test Accuracy Pass
+    #============================= Run Test Accuracy Pass ==========================
     correct = 0
     total = 0
     # since we're not training, we don't need to calculate the gradients for our outputs
@@ -222,41 +225,7 @@ def compute_loss_and_acc(y, probs):
     true_positives = (np.where(np.argmax(y, axis=1) == np.argmax(probs, axis=1)))[0].shape[0]
     acc = true_positives / probs.shape[0]
 
-    return loss, acc 
-
-
-def images_to_probs(net, images):
-    '''
-    Generates predictions and corresponding probabilities from a trained
-    network and a list of images
-    '''
-    output = net(images)
-    # convert output probabilities to predicted class
-    _, preds_tensor = torch.max(output, 1)
-    preds = np.squeeze(preds_tensor.numpy())
-    return preds, [F.softmax(el, dim=0)[i].item() for i, el in zip(preds, output)]
-
-
-def plot_classes_preds(net, images, labels):
-    '''
-    Generates matplotlib Figure using a trained network, along with images
-    and labels from a batch, that shows the network's top prediction along
-    with its probability, alongside the actual label, coloring this
-    information based on whether the prediction was correct or not.
-    Uses the "images_to_probs" function.
-    '''
-    preds, probs = images_to_probs(net, images)
-    # plot the images in the batch, along with predicted and true labels
-    fig = plt.figure(figsize=(12, 48))
-    for idx in np.arange(4):
-        ax = fig.add_subplot(1, 4, idx+1, xticks=[], yticks=[])
-        matplotlib_imshow(images[idx], one_channel=True)
-        ax.set_title("{0}, {1:.1f}%\n(label: {2})".format(
-            classes[preds[idx]],
-            probs[idx] * 100.0,
-            classes[labels[idx]]),
-                    color=("green" if preds[idx]==labels[idx].item() else "red"))
-    return fig
+    return loss, acc
 
 if __name__ == '__main__':
     main()
