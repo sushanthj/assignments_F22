@@ -36,12 +36,12 @@ def main():
     # default `log_dir` is "runs" - we'll be more specific here
     writer = SummaryWriter('runs/mnist')
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
+    trainset = torchvision.datasets.SUN397(root='./data',
                                             download=True, transform=transform)
     train_loader = DataLoader(trainset, batch_size=batch_size,
                                             shuffle=True, num_workers=2)
 
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
+    testset = torchvision.datasets.SUN397(root='./data',
                                         download=True, transform=transform)
     test_loader = DataLoader(testset, batch_size=batch_size,
                                             shuffle=False, num_workers=2)
