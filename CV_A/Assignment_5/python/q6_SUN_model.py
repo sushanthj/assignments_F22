@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class SushConvNet_CIFAR(nn.Module):
+class SushConvNet_SUN(nn.Module):
 
     def __init__(self):
         # inherit the necessary superclass

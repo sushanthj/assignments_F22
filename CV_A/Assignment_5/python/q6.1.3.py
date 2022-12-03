@@ -34,7 +34,7 @@ def main():
                                    ])
     
     # default `log_dir` is "runs" - we'll be more specific here
-    writer = SummaryWriter('runs/mnist')
+    writer = SummaryWriter('runs/cifar')
 
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                             download=True, transform=transform)

@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 
 import torch
 import torchvision
-from q6_cifar_conv_model import SushConvNet_CIFAR
+from q6_SUN_model import SushConvNet_SUN
 import torch.optim as optim
 import torch.nn as nn
 
 from mpl_toolkits.axes_grid1 import ImageGrid
 from NN import *
 from torch.utils.data import TensorDataset, DataLoader
+from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 
 from torch.utils.tensorboard import SummaryWriter
@@ -34,8 +35,9 @@ def main():
                                    ])
     
     # default `log_dir` is "runs" - we'll be more specific here
-    writer = SummaryWriter('runs/mnist')
+    writer = SummaryWriter('runs/sun')
 
+    #! Change from datasets.SUN397 to ImageFolder
     trainset = torchvision.datasets.SUN397(root='./data',
                                             download=True, transform=transform)
     train_loader = DataLoader(trainset, batch_size=batch_size,
@@ -49,7 +51,7 @@ def main():
     classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-    net = SushConvNet_CIFAR()
+    net = SushConvNet_SUN()
     net.to(device)
 
     # criterion = nn.CrossEntropyLoss()
@@ -106,7 +108,7 @@ def main():
     
     
     # reload the network to measure test accuracy
-    net = SushConvNet_CIFAR()
+    net = SushConvNet_SUN()
     net.load_state_dict(torch.load(PATH))
     net.to(device)
     
