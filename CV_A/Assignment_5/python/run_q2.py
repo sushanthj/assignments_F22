@@ -44,7 +44,9 @@ def main():
     test = sigmoid(np.array([-1000,1000]))
     print('should be zero and one\t',test.min(),test.max())
 
-    # implement forward
+    # Forward function does the following in order:
+    # 1. Finds the value of XW + b (idk why it's XW, this was TA's choice)
+    # 
     h1 = forward(x,params,'layer1', sigmoid)
     print("forward shape is",h1.shape)
 
@@ -74,10 +76,20 @@ def main():
     # we already did derivative through softmax
     # so we pass in a linear_deriv, which is just a vector of ones to make this a no-op
 
+    #? Reason behind using linear_deriv (np.ones) as softmax derivative #
+    # In pytorch the cross entropy loss includes the softmax on final layer + loss function
+    # Therefore in pytorch's case, if we calculate derivative of cross-entropy loss, 
+    #  we automatically have calculated the derivate through softmax as well
+
     #? My comments
     # basically the derivative w.r.t the softmax function should only return an array of np.ones
     # of the same shape as the post_activation shape of softmax( 40,4) -> this is done by linear_deriv
 
+    # the backwards function does the following in order
+    # 1. Finds derivative through activation function (here linear_deriv)
+    # 2. Find derivative to bias
+    # 3. Finds derivative to W and X
+    # Finally, it returns derivative on X as delta
     delta2 = backwards(delta1, params, 'output', linear_deriv)
     print("delta2 shape is", delta2.shape)
 

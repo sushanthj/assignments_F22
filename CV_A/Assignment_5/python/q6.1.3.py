@@ -39,12 +39,12 @@ def main():
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                             download=True, transform=transform)
     train_loader = DataLoader(trainset, batch_size=batch_size,
-                                            shuffle=True, num_workers=2)
+                                            shuffle=True, num_workers=4)
 
     testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                         download=True, transform=transform)
     test_loader = DataLoader(testset, batch_size=batch_size,
-                                            shuffle=False, num_workers=2)
+                                            shuffle=False, num_workers=4)
     
     classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
@@ -122,11 +122,11 @@ def main():
         for data in test_loader:
             inputs, labels = data[0].to(device), data[1].to(device)
             outputs = net(inputs)
-            _, predictions = torch.max(outputs, 1)
+            _, predicted = torch.max(outputs, 1)
             total_acc += labels.size(0)
             correct_acc += (predicted == labels).sum().item()
             # collect the correct predictions for each class
-            for label, prediction in zip(labels, predictions):
+            for label, prediction in zip(labels, predicted):
                 if label == prediction:
                     correct_pred[classes[label]] += 1
                 total_pred[classes[label]] += 1

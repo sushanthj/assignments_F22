@@ -10,8 +10,7 @@ import torch.nn as nn
 
 from mpl_toolkits.axes_grid1 import ImageGrid
 from NN import *
-from torch.utils.data import TensorDataset, DataLoader
-from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
 from torch.utils.tensorboard import SummaryWriter
@@ -31,25 +30,31 @@ def main():
     # We transform them to Tensors of normalized range [-1, 1]
     transform = transforms.Compose(
                                    [transforms.ToTensor(),
-                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                                    transforms.Resize((256,256))
                                    ])
     
     # default `log_dir` is "runs" - we'll be more specific here
     writer = SummaryWriter('runs/sun')
 
     #! Change from datasets.SUN397 to ImageFolder
-    trainset = torchvision.datasets.SUN397(root='./data',
-                                            download=True, transform=transform)
+    trainset = torchvision.datasets.ImageFolder(
+                                                root='/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_1/data/pytorch_struct/train',
+                                                transform=transform
+                                               )
     train_loader = DataLoader(trainset, batch_size=batch_size,
-                                            shuffle=True, num_workers=2)
-
-    testset = torchvision.datasets.SUN397(root='./data',
-                                        download=True, transform=transform)
-    test_loader = DataLoader(testset, batch_size=batch_size,
-                                            shuffle=False, num_workers=2)
+                                shuffle=True, num_workers=4, pin_memory=True)
     
-    classes = ('plane', 'car', 'bird', 'cat',
-           'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+    testset = torchvision.datasets.ImageFolder(
+                                               root='/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_1/data/pytorch_struct/valid',
+                                               transform=transform
+                                              )
+    test_loader = DataLoader(testset, batch_size=batch_size,
+                                shuffle=True, num_workers=4, pin_memory=True)
+    
+    
+    classes = ('acquarium', 'desert', 'highway', 'kitchen', 'laundromat',
+                'park', 'waterfall', 'windmill')
 
     net = SushConvNet_SUN()
     net.to(device)
@@ -103,7 +108,7 @@ def main():
     print('Finished Training')
 
     # save the trained model to disk
-    PATH = './cifar_net.pth'
+    PATH = './sun_net.pth'
     torch.save(net.state_dict(), PATH)
     
     
@@ -126,7 +131,7 @@ def main():
             outputs = net(inputs)
             _, predictions = torch.max(outputs, 1)
             total_acc += labels.size(0)
-            correct_acc += (predicted == labels).sum().item()
+            correct_acc += (predictions == labels).sum().item()
             # collect the correct predictions for each class
             for label, prediction in zip(labels, predictions):
                 if label == prediction:

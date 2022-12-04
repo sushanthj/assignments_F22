@@ -143,7 +143,7 @@ def backwards(delta,params,name='',activation_deriv=sigmoid_deriv):
     # Therefore, the sequence of gates are:
     # multiplication gate -> addition gate -> sigmoid_gate (or softmax)
     # the addition gate flows equal gradient to grad_b and mutliplication gate 
-    grad_b = np.sum(activation_derivative, axis=0)
+    grad_b = np.sum(activation_derivative, axis=0)/activation_derivative.shape[0]
 
     grad_W = X.T @ activation_derivative
     grad_X = activation_derivative @ W.T

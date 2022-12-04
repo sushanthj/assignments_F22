@@ -19,8 +19,8 @@ class SushConvNet_SUN(nn.Module):
         # here too the weights will have a size which maps the hidden layer
         # to the output layer. The weights shape will be (hidden_size, 36)
         # where 36 = number of total possible labels
-        self.layer1_shape = (400, 64)
-        self.layer2_shape = (64, 10)
+        self.layer1_shape = (59536, 1200)
+        self.layer2_shape = (1200, 8)
 
         # Define Operations
         # conv operations
@@ -37,7 +37,7 @@ class SushConvNet_SUN(nn.Module):
 
     def forward(self, x):
         # reshape to N,C,H,W
-        x = x.view(-1, 3, 32, 32)
+        x = x.view(-1, 3, 256, 256)
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = torch.flatten(x, 1) # flatten all dimensions except batch
