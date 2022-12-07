@@ -1,0 +1,289 @@
+% This LaTeX was auto-generated from MATLAB code.
+% To make changes, update the MATLAB code and export to LaTeX again.
+
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{epstopdf}
+\usepackage[table]{xcolor}
+\usepackage{matlab}
+
+\sloppy
+\epstopdfsetup{outdir=./}
+\graphicspath{ {./q6_images/} }
+
+\begin{document}
+
+\matlabheading{Q2. Fun with SE(2)}
+
+\vspace{1em}
+
+\matlabheadingthree{(a.) A, relative to fixed frame}
+
+
+\vspace{1em}
+\matlabheadingthree{(b.) A, relative to the fixed frame, followed by B, relative to the current frame.}
+
+
+\vspace{1em}
+\matlabheadingthree{(c.) A, relative to the fixed frame, followed by B, relative to the fixed frame.}
+
+
+\vspace{1em}
+\matlabheadingthree{(d.) B, relative to the fixed frame.}
+
+
+\vspace{1em}
+\matlabheadingthree{(e.) B, relative to the fixed frame, followed by A, relative to the fixed frame.}
+
+
+\vspace{1em}
+\matlabheadingthree{(f.) B, relative to the fixed frame, followed by A, relative to the current frame.}
+
+
+
+\vspace{1em}
+\vspace{1em}
+
+\matlabheading{Q6. Jacobian of Given Manipulator}
+
+
+\vspace{1em}
+\matlabheadingtwo{1. Direct Differentiation Method}
+
+\begin{matlabcode}
+% Creating symbolic variables for the manipulator
+syms theta1 d2 theta3
+
+% The DH matrix
+DH = [[theta1, 10+d2, 0,  0];
+      [0,      0,     9,  pi/2];
+      [theta3, 0,     5,  0]]
+\end{matlabcode}
+\begin{matlabsymbolicoutput}
+DH = 
+
+\hskip1em $\displaystyle \left(\begin{array}{cccc}
+\theta_1  & d_2 +10 & 0 & 0\\
+0 & 0 & 9 & \frac{\pi }{2}\\
+\theta_3  & 0 & 5 & 0
+\end{array}\right)$
+\end{matlabsymbolicoutput}
+\begin{matlabcode}
+
+num_joints = size(DH,1)
+\end{matlabcode}
+\begin{matlaboutput}
+num_joints = 3
+\end{matlaboutput}
+\begin{matlabcode}
+
+for joints = 1:num_joints
+    
+    t_i = DH(joints,1); % theta_i
+    d_i = DH(joints,2);
+    a_i = DH(joints,3);
+    alpha_i = DH(joints,4);
+
+    H_mat = [ 
+              [cos(t_i), -sin(t_i)*cos(alpha_i), sin(t_i)*sin(alpha_i),  a_i*cos(t_i)];
+              [sin(t_i), cos(t_i)*cos(alpha_i),  -cos(t_i)*sin(alpha_i), a_i*sin(t_i)];
+              [0,        sin(alpha_i),           cos(alpha_i),           d_i         ];
+              [0,        0,                      0,                      1           ] 
+            ];
+    if joints == 1
+        H_1 = H_mat
+    elseif joints == 2
+        H_2 = H_mat
+    else
+        H_3 = H_mat
+    end
+end
+\end{matlabcode}
+\begin{matlabsymbolicoutput}
+H\_1 = 
+
+\hskip1em $\displaystyle \left(\begin{array}{cccc}
+\cos \left(\theta_1 \right) & -\sin \left(\theta_1 \right) & 0 & 0\\
+\sin \left(\theta_1 \right) & \cos \left(\theta_1 \right) & 0 & 0\\
+0 & 0 & 1 & d_2 +10\\
+0 & 0 & 0 & 1
+\end{array}\right)$
+H\_2 = 
+
+\hskip1em $\displaystyle \left(\begin{array}{cccc}
+1 & 0 & 0 & 9\\
+0 & 0 & -1 & 0\\
+0 & 1 & 0 & 0\\
+0 & 0 & 0 & 1
+\end{array}\right)$
+H\_3 = 
+
+\hskip1em $\displaystyle \left(\begin{array}{cccc}
+\cos \left(\theta_3 \right) & -\sin \left(\theta_3 \right) & 0 & 5\,\cos \left(\theta_3 \right)\\
+\sin \left(\theta_3 \right) & \cos \left(\theta_3 \right) & 0 & 5\,\sin \left(\theta_3 \right)\\
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1
+\end{array}\right)$
+\end{matlabsymbolicoutput}
+\begin{matlabcode}
+
+% Finding the final transformation matrix
+
+H_end_to_base = H_1*H_2*H_3
+\end{matlabcode}
+\begin{matlabsymbolicoutput}
+H\_end\_to\_base = 
+
+\hskip1em $\displaystyle \left(\begin{array}{cccc}
+\cos \left(\theta_1 \right)\,\cos \left(\theta_3 \right) & -\cos \left(\theta_1 \right)\,\sin \left(\theta_3 \right) & \sin \left(\theta_1 \right) & 9\,\cos \left(\theta_1 \right)+5\,\cos \left(\theta_1 \right)\,\cos \left(\theta_3 \right)\\
+\cos \left(\theta_3 \right)\,\sin \left(\theta_1 \right) & -\sin \left(\theta_1 \right)\,\sin \left(\theta_3 \right) & -\cos \left(\theta_1 \right) & 9\,\sin \left(\theta_1 \right)+5\,\cos \left(\theta_3 \right)\,\sin \left(\theta_1 \right)\\
+\sin \left(\theta_3 \right) & \cos \left(\theta_3 \right) & 0 & d_2 +5\,\sin \left(\theta_3 \right)+10\\
+0 & 0 & 0 & 1
+\end{array}\right)$
+\end{matlabsymbolicoutput}
+\begin{matlabcode}
+
+f_theta = H_end_to_base(1:3,4)
+\end{matlabcode}
+\begin{matlabsymbolicoutput}
+f\_theta = 
+
+\hskip1em $\displaystyle \left(\begin{array}{c}
+9\,\cos \left(\theta_1 \right)+5\,\cos \left(\theta_1 \right)\,\cos \left(\theta_3 \right)\\
+9\,\sin \left(\theta_1 \right)+5\,\cos \left(\theta_3 \right)\,\sin \left(\theta_1 \right)\\
+d_2 +5\,\sin \left(\theta_3 \right)+10
+\end{array}\right)$
+\end{matlabsymbolicoutput}
+\begin{matlabcode}
+
+jacob = jacobian(f_theta, [theta1, d2, theta3])
+\end{matlabcode}
+\begin{matlabsymbolicoutput}
+jacob = 
+
+\hskip1em $\displaystyle \left(\begin{array}{ccc}
+-9\,\sin \left(\theta_1 \right)-5\,\cos \left(\theta_3 \right)\,\sin \left(\theta_1 \right) & 0 & -5\,\cos \left(\theta_1 \right)\,\sin \left(\theta_3 \right)\\
+9\,\cos \left(\theta_1 \right)+5\,\cos \left(\theta_1 \right)\,\cos \left(\theta_3 \right) & 0 & -5\,\sin \left(\theta_1 \right)\,\sin \left(\theta_3 \right)\\
+0 & 1 & 5\,\cos \left(\theta_3 \right)
+\end{array}\right)$
+\end{matlabsymbolicoutput}
+
+
+
+\vspace{1em}
+\matlabheadingtwo{2. Column-by-column Method}
+
+\matlabheadingthree{Building the 1st column of the Jacobian (revolute)}
+
+\begin{par}
+\hfill \break
+\end{par}
+
+\begin{matlabcode}
+% Find R
+R_0_to_0 = eye(3);
+
+d_3_to_0 = H_end_to_base(1:3,4);
+
+v_1_to_0 = R_0_to_0 * cross([0;0;1], d_3_to_0);
+\end{matlabcode}
+
+\vspace{1em}
+
+\matlabheadingthree{Building the 2nd column of the Jacobian (prismatic)}
+
+\begin{par}
+\hfill \break
+\end{par}
+
+\begin{matlabcode}
+% Find R
+R_1_to_0 = H_1(1:3,1:3); % H_1 was found previously
+
+v_2_to_0 = R_1_to_0 * [0;0;1];
+\end{matlabcode}
+
+
+\vspace{1em}
+\matlabheadingthree{Building the 3rd column of the Jacobian (prismatic)}
+
+\begin{par}
+\hfill \break
+\end{par}
+
+\begin{matlabcode}
+% Find R
+H_2_to_0 = H_1 * H_2;
+R_2_to_0 = H_2_to_0(1:3,1:3);
+
+d_3_to_2 = H_3(1:3,4);
+
+v_3_to_0 = R_2_to_0 * cross([0;0;1], d_3_to_2);
+\end{matlabcode}
+
+
+\vspace{1em}
+\matlabheadingthree{Combining the Columns}
+
+\begin{par}
+\hfill \break
+\end{par}
+
+\begin{matlabcode}
+% We can see that the second jacobian (column-by-column building method)
+% will be the same as the first jacobian (direct differentiation method)
+jacob_2 = [v_1_to_0, v_2_to_0, v_3_to_0]
+\end{matlabcode}
+\begin{matlabsymbolicoutput}
+jacob\_2 = 
+
+\hskip1em $\displaystyle \left(\begin{array}{ccc}
+-9\,\sin \left(\theta_1 \right)-5\,\cos \left(\theta_3 \right)\,\sin \left(\theta_1 \right) & 0 & -5\,\cos \left(\theta_1 \right)\,\sin \left(\theta_3 \right)\\
+9\,\cos \left(\theta_1 \right)+5\,\cos \left(\theta_1 \right)\,\cos \left(\theta_3 \right) & 0 & -5\,\sin \left(\theta_1 \right)\,\sin \left(\theta_3 \right)\\
+0 & 1 & 5\,\cos \left(\theta_3 \right)
+\end{array}\right)$
+\end{matlabsymbolicoutput}
+\begin{matlabcode}
+
+% substituting actual values of theta1 and theta3 into jacobian we get:
+theta1 = 0;
+theta3 = 0;
+
+% subs(jacob_2)
+\end{matlabcode}
+
+
+\matlabheadingtwo{3. Singular Configurations}
+
+\begin{par}
+\begin{flushleft}
+Singular Configurations can be found by checking for a rank reduction in the Jacobian. This is done by finding
+\end{flushleft}
+\end{par}
+
+\begin{par}
+\begin{flushleft}
+the determinant of the Jacobian and setting its value to zero:
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+jacob_det = det(jacob);
+
+eqn = jacob_det == 0
+\end{matlabcode}
+\begin{matlabsymbolicoutput}
+eqn = 
+
+\hskip1em $\displaystyle -45\,{\cos \left(\theta_1 \right)}^2 \,\sin \left(\theta_3 \right)-45\,{\sin \left(\theta_1 \right)}^2 \,\sin \left(\theta_3 \right)-25\,{\cos \left(\theta_1 \right)}^2 \,\cos \left(\theta_3 \right)\,\sin \left(\theta_3 \right)-25\,\cos \left(\theta_3 \right)\,{\sin \left(\theta_1 \right)}^2 \,\sin \left(\theta_3 \right)=0$
+\end{matlabsymbolicoutput}
+
+\end{document}
