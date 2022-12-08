@@ -1,18 +1,22 @@
 import numpy as np
-import scipy.io
 import matplotlib.pyplot as plt
+import os
+import sys
 
 import torch
 import torchvision
-from q6_flower_model import SushConvNet_Flower
 import torch.optim as optim
 import torch.nn as nn
 
-from mpl_toolkits.axes_grid1 import ImageGrid
 from NN import *
 from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
+
+# add models folder to path
+sys.path.insert(0,'/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_5/python/network_models')
+
+from q6_flower_model import SushConvNet_Flower
 
 def main():
 
@@ -35,23 +39,24 @@ def main():
     
     # default `log_dir` is "runs" - we'll be more specific here
     writer = SummaryWriter('runs/flower')
+    data_path = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_5/data/oxford-flowers102/'
 
     trainset = torchvision.datasets.ImageFolder(
-                                                root='/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_5/data/oxford-flowers102/train',
+                                                root=os.path.join(data_path, 'train'),
                                                 transform=transform
                                                )
     train_loader = DataLoader(trainset, batch_size=batch_size,
                                 shuffle=True, num_workers=4, pin_memory=True)
     
     valset = torchvision.datasets.ImageFolder(
-                                               root='/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_5/data/oxford-flowers102/val',
+                                               root=os.path.join(data_path, 'val'),
                                                transform=transform
                                               )
     val_loader = DataLoader(valset, batch_size=batch_size, \
                                 shuffle=True, num_workers=4, pin_memory=True)
     
     testset = torchvision.datasets.ImageFolder(
-                                               root='/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_5/data/oxford-flowers102/test',
+                                               root=os.path.join(data_path, 'test'),
                                                transform=transform
                                               )
     test_loader = DataLoader(testset, batch_size=batch_size,
@@ -98,7 +103,8 @@ def main():
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
 
-                print(f"traning accuracy for epoch {epoch} and batch {i} is {(100 * correct // total)}")\
+                print(f"traning accuracy for epoch {epoch} \
+                        and batch {i} is {(100 * correct // total)}")\
                 
                 # ...log the running accuracy
                 writer.add_scalar('training accuracy',
@@ -106,7 +112,7 @@ def main():
                                 epoch * len(train_loader) + i)
                 running_loss = 0.0
             
-        #====================================Run Val accuracy pass==================================#
+        #================================== Run Val accuracy pass ===============================#
         correct_acc = 0
         total_acc = 0
         # again no gradients needed
@@ -133,7 +139,7 @@ def main():
     net.load_state_dict(torch.load(PATH))
     net.to(device)
     
-    #====================================Run Test accuracy pass==================================#
+    #==================================  Run Test accuracy pass  ================================#
     correct_acc = 0
     total_acc = 0
     # again no gradients needed

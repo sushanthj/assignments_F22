@@ -1,10 +1,10 @@
 import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
+import sys
 
 import torch
 import torchvision
-from q6_SUN_model import SushConvNet_SUN
 import torch.optim as optim
 import torch.nn as nn
 
@@ -14,6 +14,10 @@ from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
 from torch.utils.tensorboard import SummaryWriter
+
+# add models folder to path
+sys.path.insert(0,'/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_5/python/network_models')
+from q6_SUN_model import SushConvNet_SUN
 
 def main():
 

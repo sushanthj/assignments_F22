@@ -1,11 +1,10 @@
 import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
+import sys
 
 import torch
 import torchvision
-from q6_model import SushNet
-from q6_conv_model import SushConvNet
 import torch.optim as optim
 import torch.nn as nn
 
@@ -15,10 +14,15 @@ from torch.utils.data import TensorDataset, DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
 
+# add models folder to path
+sys.path.insert(0,'/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_5/python/network_models')
+
+from q6_model import SushNet
+
 def main():
 
     # default `log_dir` is "runs" - we'll be more specific here
-    writer = SummaryWriter('runs/mnist')
+    writer = SummaryWriter('runs/mnist_CONV')
 
     train_data = scipy.io.loadmat('../data/nist36_train.mat')
     valid_data = scipy.io.loadmat('../data/nist36_valid.mat')
@@ -80,8 +84,7 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-    # net = SushNet()
-    net = SushConvNet()
+    net = SushNet()
     net.to(device)
 
     # criterion = nn.CrossEntropyLoss()
@@ -137,14 +140,13 @@ def main():
     print('Finished Training')
 
     # save the trained model to disk
-    PATH = './sush_net.pth'
+    PATH = './sush_net_fc.pth'
     torch.save(net.state_dict(), PATH)
 
     
     
     # reload the network to measure test accuracy
-    # net = SushNet()
-    net = SushConvNet()
+    net = SushNet()
     net.load_state_dict(torch.load(PATH))
     net.to(device)
 

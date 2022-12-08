@@ -25,3 +25,11 @@ Now, we'll initialize them by sampling random variables from a gaussian distribu
 3. https://pytorch.org/tutorials/beginner/blitz/neural_networks_tutorial.html
 4. https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 5. https://courses.cs.washington.edu/courses/cse446/19au/section9.html
+
+### General Debugging
+   1. It's easier to debug a network on CPU first, GPU obscures some debug messages
+   2. In pytorch if you get 'Target 10 is out of bounds' understand that 'target' = labels
+      And it's most likely out of bounds because the shape of final layer of your network is not
+      matching the total number of class labels which pytorch has found (as in found by the 
+      dataloader or defined by the user itself in say a train_labels.mat file)
+   3. You can use x.shape even if x = torch.Tensor(), this will still output the shape

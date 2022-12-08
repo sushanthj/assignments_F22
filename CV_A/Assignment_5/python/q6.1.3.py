@@ -1,19 +1,22 @@
+import sys
 import numpy as np
-import scipy.io
 import matplotlib.pyplot as plt
 
 import torch
 import torchvision
-from q6_cifar_conv_model import SushConvNet_CIFAR
 import torch.optim as optim
 import torch.nn as nn
 
-from mpl_toolkits.axes_grid1 import ImageGrid
 from NN import *
 from torch.utils.data import TensorDataset, DataLoader
 import torchvision.transforms as transforms
 
 from torch.utils.tensorboard import SummaryWriter
+
+# add models folder to path
+sys.path.insert(0,'/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_5/python/network_models')
+from q6_cifar_conv_model import SushConvNet_CIFAR
+
 
 def main():
 
