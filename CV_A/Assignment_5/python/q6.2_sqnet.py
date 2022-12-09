@@ -33,7 +33,7 @@ def main():
     transform = weights.transforms()
     
     # default `log_dir` is "runs" - we'll be more specific here
-    writer = SummaryWriter('runs/flower')
+    writer = SummaryWriter('runs/flower_squeezenet')
     data_path = '/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_5/data/oxford-flowers102/'
 
     trainset = torchvision.datasets.ImageFolder(

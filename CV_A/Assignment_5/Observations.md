@@ -33,3 +33,10 @@ Now, we'll initialize them by sampling random variables from a gaussian distribu
       matching the total number of class labels which pytorch has found (as in found by the 
       dataloader or defined by the user itself in say a train_labels.mat file)
    3. You can use x.shape even if x = torch.Tensor(), this will still output the shape
+
+
+# Homework
+
+1. The squeezenet gave higher accuracy but somehow took more number of epochs to train even though
+   it was technically just fine-tuned
+2. The learning rate was also quite high (should reduce to 0.5e-3 I think)
