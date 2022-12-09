@@ -14,8 +14,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.models import squeezenet1_1, SqueezeNet1_1_Weights
 
-weights = SqueezeNet1_1_Weights.DEFAULT
-model = squeezenet1_1(weights)
+model = squeezenet1_1(pretrained=True)
 
 def main():
 
@@ -23,14 +22,14 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     print(device)
 
-    max_iters = 90
+    max_iters = 50
     # pick a batch size, learning rate
     batch_size = 128
-    learning_rate = 1e-3
+    learning_rate = 1e-4
 
     # The output of torchvision datasets are PILImage images of range [0, 1]
     # We transform them to Tensors of normalized range [-1, 1]
-    transform = weights.transforms()
+    transform = SqueezeNet1_1_Weights.IMAGENET1K_V1.transforms()
     
     # default `log_dir` is "runs" - we'll be more specific here
     writer = SummaryWriter('runs/flower_squeezenet')
@@ -57,12 +56,26 @@ def main():
     test_loader = DataLoader(testset, batch_size=batch_size,
                                 shuffle=True, num_workers=4, pin_memory=True)
 
-    net = model.train()
+    # set all internal weights to fixed
+    for param in model.parameters():
+        param.requires_grad = False
+
+    
+    final_conv = nn.Conv2d(512, 102, kernel_size=1)
+    model.classifier = nn.Sequential(
+            nn.Dropout(p=0.5), final_conv, nn.ReLU(inplace=True), nn.AdaptiveAvgPool2d((1, 1))
+        )
+
+    # set classifier weights to true
+    for param in model.parameters():
+        param.requires_grad = True
+
+    net = model
     net.to(device)
 
     criterion = nn.CrossEntropyLoss()
     # criterion = nn.NLLLoss()
-    optimizer = optim.Adam(net.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(net.parameters(), lr=learning_rate) #, weight_decay=0.002)
 
     # iterate over epochs (max_iters = epochs)
     for epoch in range(max_iters):  # loop over the dataset multiple times
@@ -96,6 +109,7 @@ def main():
 
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
+                
                 correct += (predicted == labels).sum().item()
 
                 print(f"traning accuracy for epoch {epoch} \
@@ -147,7 +161,7 @@ def main():
             correct_acc += (predictions == labels).sum().item()
 
     # print overall accuracy
-    print(f'Accuracy of the network on val images: {100 * correct // total} %')
+    print(f'Accuracy of the network on val images: {100 * correct / total} %')
 
     
 

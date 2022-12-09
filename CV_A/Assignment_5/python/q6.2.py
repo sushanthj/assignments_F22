@@ -26,8 +26,8 @@ def main():
 
     max_iters = 5
     # pick a batch size, learning rate
-    batch_size = 100
-    learning_rate = 1e-3
+    batch_size = 128
+    learning_rate = 1e-4
 
     # The output of torchvision datasets are PILImage images of range [0, 1]
     # We transform them to Tensors of normalized range [-1, 1]
@@ -152,7 +152,7 @@ def main():
             correct_acc += (predictions == labels).sum().item()
 
     # print overall accuracy
-    print(f'Accuracy of the network on val images: {100 * correct // total} %')
+    print(f'Accuracy of the network on test images: {100 * correct // total} %')
 
     
 

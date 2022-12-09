@@ -39,4 +39,7 @@ Now, we'll initialize them by sampling random variables from a gaussian distribu
 
 1. The squeezenet gave higher accuracy but somehow took more number of epochs to train even though
    it was technically just fine-tuned
-2. The learning rate was also quite high (should reduce to 0.5e-3 I think)
+2. The learning rate was also quite high (should reduce to 0.5e-3 I think),     still final acc = 100%
+
+3. squeezenet on 6.2 = 100%
+4. sush_net on 6.2 = 28%
