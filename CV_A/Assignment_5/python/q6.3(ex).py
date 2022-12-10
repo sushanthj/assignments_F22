@@ -60,27 +60,27 @@ def main():
 
     
     #==================================  Run Val accuracy pass  ================================#
-    # correct = 0
-    # total = 0
-    # # since we're not training, we don't need to calculate the gradients for our outputs
-    # with torch.no_grad():
-    #     for i, data in enumerate(val_loader, 0):
-    #         # get the inputs; data is a list of [inputs, labels]
-    #         inputs, labels = data[0].to(device), data[1].to(device)
-    #         inputs = inputs.to(torch.float32)
+    correct = 0
+    total = 0
+    # since we're not training, we don't need to calculate the gradients for our outputs
+    with torch.no_grad():
+        for i, data in enumerate(val_loader, 0):
+            # get the inputs; data is a list of [inputs, labels]
+            inputs, labels = data[0].to(device), data[1].to(device)
+            inputs = inputs.to(torch.float32)
             
-    #         # reshape inputs to match the val_set shape of 64x64 images
-    #         inputs = inputs.view(-1, 3, 64, 64)
-    #         inputs = transform(inputs)
+            # reshape inputs to match the val_set shape of 64x64 images
+            inputs = inputs.view(-1, 3, 64, 64)
+            inputs = transform(inputs)
             
-    #         # calculate correct label predictions
-    #         outputs = net(inputs)
-    #         _, predicted = torch.max(outputs.data, 1)
-    #         total += labels.size(0)
-    #         correct += (predicted == labels).sum().item()
-    #         print("Running Validation Accuracy", (100 * correct / total))
+            # calculate correct label predictions
+            outputs = net(inputs)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+            print("Running Validation Accuracy", (100 * correct / total))
 
-    # print("Validation accuracy is", (100 * correct // total))
+    print("Validation accuracy is", (100 * correct // total))
 
     #==================================  Run Val accuracy pass  ================================#
     # """

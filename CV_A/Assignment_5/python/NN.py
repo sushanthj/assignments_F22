@@ -22,7 +22,7 @@ def initialize_weights(in_size,out_size,params,name=''):
     W = np.random.randn(in_size, out_size) # since we're doing Wx multiplication
     # we need to ensure the number of columns = number of inputs (i.e. size of x)
     # however, they will be XW instead of Wx so here the order is switched
-    W = W * np.sqrt(2/(in_size+out_size))
+    W = W * np.sqrt(6/(in_size+out_size))
 
     params['W' + name] = W
     params['b' + name] = b

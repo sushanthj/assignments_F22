@@ -5,7 +5,8 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 from NN import *
 
 def main():
-    visualize = False
+    np.random.seed(3)
+    visualize = True
 
     train_data = scipy.io.loadmat('../data/nist36_train.mat')
     valid_data = scipy.io.loadmat('../data/nist36_valid.mat')
@@ -28,13 +29,9 @@ def main():
 
     max_iters = 100
     # pick a batch size, learning rate
-    batch_size = 100
+    batch_size = 64
     learning_rate = 1e-3
     hidden_size = 64
-    ##########################
-    ##### your code here #####
-    ##########################
-
 
     batches = get_random_batches(train_x,train_y,batch_size)
     batch_num = len(batches)
@@ -100,8 +97,8 @@ def main():
 
 
     h1 = forward(valid_x,params,'layer1')
-    probs = forward(h1,params,'output',softmax)
-    loss, acc = compute_loss_and_acc(valid_y, probs)
+    val_probs = forward(h1,params,'output',softmax)
+    loss, acc = compute_loss_and_acc(valid_y, val_probs)
     valid_loss.append(loss/valid_x.shape[0])
     valid_acc.append(acc)
 
@@ -170,11 +167,11 @@ def main():
         confusion_matrix = np.zeros((train_y.shape[1],train_y.shape[1]))
 
         # compute confusion matrix
-        ##########################
-        ##### your code here #####
-        ##########################
+        for i in range(0, test_y.shape[0]):
+            truth = np.argmax(test_probs[i, :])
+            pred = np.argmax(test_y[i, :])
 
-
+            confusion_matrix[pred, truth] += 1
 
         import string
         plt.imshow(confusion_matrix,interpolation='nearest')

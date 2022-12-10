@@ -25,16 +25,38 @@ for img in os.listdir('../images'):
     bboxes, bw = findLetters(im1)
 
     plt.imshow(bw)
+
     for bbox in bboxes:
         minr, minc, maxr, maxc = bbox
         rect = matplotlib.patches.Rectangle((minc, minr), maxc - minc, maxr - minr,
                                 fill=False, edgecolor='red', linewidth=2)
         plt.gca().add_patch(rect)
     plt.show()
+
     # find the rows using..RANSAC, counting, clustering, etc.
     ##########################
     ##### your code here #####
     ##########################
+    rows = []
+    realtime_arr = [bboxes[0]]
+    
+    for i in range(1,len(bboxes)):
+        curr_bbox = bboxes[i]
+        box_center_x, box_center_y = (curr_bbox[3] + curr_bbox[1])/2, (curr_bbox[2] + curr_bbox[0])/2
+        
+        ref_bbox = realtime_arr[-1]
+
+        if box_center_y < ref_bbox[0] or box_center_y > ref_bbox[2]:
+            rows.append(realtime_arr)
+            realtime_arr = []
+            realtime_arr.append(curr_bbox)
+        
+        else:
+            realtime_arr.append(curr_bbox)
+    
+    rows.append(realtime_arr)
+
+    print(" This image had this many rows", len(rows))
 
 
     # crop the bounding boxes
