@@ -414,12 +414,12 @@ if __name__ == "__main__":
 
     # Optimize the M2
     M2_final, P_final, start_obj, end_obj = bundleAdjustment(
-                                                            K1, 
-                                                            M1, 
-                                                            inlier_pts1, 
-                                                            K2, 
-                                                            M2_init, 
-                                                            inlier_pts2, 
+                                                            K1,
+                                                            M1,
+                                                            inlier_pts1,
+                                                            K2,
+                                                            M2_init,
+                                                            inlier_pts2,
                                                             P_init
                                                             )
 

@@ -61,7 +61,7 @@ def eightpoint(pts1, pts2, M):
 
 def computeF(x1, x2):
     """
-    Computes the fundamental based on 
+    Computes the fundamental based on
     matching points in both images
 
     Args:
@@ -74,12 +74,12 @@ def computeF(x1, x2):
 
     # Define a dummy H matrix
     A_build = []
-    
+
     # Define the A matrix for (Ah = 0) (A matrix size = N*2 x 9)
     for i in range(x1.shape[0]):
         row_1 = np.array([ x2[i,0]*x1[i,0], x2[i,0]*x1[i,1], x2[i,0], x2[i,1]*x1[i,0], x2[i,1]*x1[i,1], x2[i,1], x1[i,0], x1[i,1], 1])
         A_build.append(row_1)
-    
+
     A = np.stack(A_build, axis=0)
 
     # Do the least squares minimization to get the homography matrix
@@ -110,10 +110,13 @@ def check_and_create_directory(dir_path, create):
 
 
 if __name__ == "__main__":
-        
+
     correspondence = np.load('data/some_corresp.npz') # Loading correspondences
     intrinsics = np.load('data/intrinsics.npz') # Loading the intrinscis of the camera
     K1, K2 = intrinsics['K1'], intrinsics['K2']
+
+    print(K1, '\n', K2)
+
     pts1, pts2 = correspondence['pts1'], correspondence['pts2']
     im1 = plt.imread('data/im1.png')
     im2 = plt.imread('data/im2.png')
