@@ -104,7 +104,7 @@ pt_topleft = rect[:2]
 pt_bottomright = rect[2:4]
 patch_prev = patches.Rectangle((pt_topleft[0],pt_topleft[1]), pt_bottomright[0] - pt_topleft[0],pt_bottomright[1] - pt_topleft[1] ,linewidth=2,edgecolor='purple',facecolor='none')
 ax.add_patch(patch)
-ax.add_patch(patch_prev)
+# ax.add_patch(patch_prev)
 ax.get_xaxis().set_visible(False)
 ax.get_yaxis().set_visible(False)
 im = ax.imshow(It1, cmap='gray')

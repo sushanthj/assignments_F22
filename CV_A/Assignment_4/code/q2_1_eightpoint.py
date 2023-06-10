@@ -118,6 +118,11 @@ if __name__ == "__main__":
     print(K1, '\n', K2)
 
     pts1, pts2 = correspondence['pts1'], correspondence['pts2']
+
+    print(pts1)
+
+    print(pts2)
+
     im1 = plt.imread('data/im1.png')
     im2 = plt.imread('data/im2.png')
 

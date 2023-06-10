@@ -437,8 +437,8 @@ def similarity_to_set(word_hist, histograms, opts):
     Compute similarity between a histogram of visual words with all training image histograms.
 
     [input]
-    * word_hist: numpy.ndarray of shape (K)
-    * histograms: numpy.ndarray of shape (N,K)
+    * word_hist: numpy.ndarray of shape (K) (test image histogram)
+    * histograms: numpy.ndarray of shape (N,K) (trained histograms)
     * opts: user inputs
 
     [output]
@@ -459,6 +459,7 @@ def similarity_to_set(word_hist, histograms, opts):
     # with multiprocessing.Pool(processes=15) as pool:
     #     M = pool.starmap(get_hist_similarities, zip(train_files_list, repeat((word_hist, histograms))))
 
+    # itertae through every train file's histogram and get distance measure (inverse of similarity score)
     for i in train_files_list:
         M.append(get_hist_similarities(i, (word_hist, histograms)))
     
