@@ -60,7 +60,5 @@ int main()
     // cout << pts1 << endl;
     // cout << pts2 << endl;
 
-    
-
     return 0;
 }

@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 def computeH(x1, x2):
     """
-    Computes the homography based on 
+    Computes the homography based on
     matching points in both images
 
     Args:
@@ -30,14 +30,14 @@ def computeH(x1, x2):
 
     # Define a dummy H matrix
     A_build = []
-    
+
     # Define the A matrix for (Ah = 0) (A matrix size = N*2 x 9)
     for i in range(x1.shape[0]):
         row_1 = np.array([ x2[i,0], x2[i,1], 1, 0, 0, 0, -x1[i,0]*x2[i,0], -x1[i,0]*x2[i,1], -x1[i,0] ])
         row_2 = np.array([ 0, 0, 0, x2[i,0], x2[i,1], 1, -x1[i,1]*x2[i,0], -x1[i,1]*x2[i,1], -x1[i,1] ])
         A_build.append(row_1)
         A_build.append(row_2)
-    
+
     A = np.stack(A_build, axis=0)
 
     # Do the least squares minimization to get the homography matrix
@@ -55,6 +55,8 @@ def computeH_norm(x1, x2):
     """
     Compute the normalized coordinates
     and also the homography matrix using computeH
+    Reference Document: https://drive.google.com/file/d/1pJD4Ss2JhErPRNglj9sFvzu5ZEAPlpqV/view?usp=sharing
+    My document: https://drive.google.com/file/d/14ubBhUQqKF_UZJLy60bBADf0we1Uxqlm/view?usp=sharing
 
     Args:
         x1 (Mx2): the matched locations of corners in img1
@@ -79,8 +81,7 @@ def computeH_norm(x1, x2):
     current_max_dist_img1 = np.max(np.linalg.norm(moved_x1),axis=0)
     current_max_dist_img2 = np.max(np.linalg.norm(moved_x2),axis=0)
 
-    
-    # moved and scaled image 1 points
+    # moved and scaled image 1 points s.t. max_dist l2 dist for any point = sqrt(2)
     scale1 = np.sqrt(2) / (current_max_dist_img1)
     scale2 = np.sqrt(2) / (current_max_dist_img2)
     moved_scaled_x1 = moved_x1 * scale1
@@ -100,6 +101,7 @@ def computeH_norm(x1, x2):
 
     # Denormalization
     H2to1 = np.matmul(np.linalg.inv(t1), np.matmul(H, t2))
+    # If normalization is confusing, please refer to link mentioned in function docstring
 
     return H2to1
 
@@ -121,7 +123,7 @@ def create_matched_points(matches, locs1, locs2):
                                               locs1[matches[i,0],1],
                                               locs2[matches[i,1],0],
                                               locs2[matches[i,1],1]]))
-    
+
     # remove the first dummy value and return
     matched_points = np.stack(matched_pts, axis=0)
     return matched_points
@@ -143,7 +145,7 @@ def computeH_ransac(locs1, locs2, opts):
     """
     #Q2.2.3
     #Compute the best fitting homography given a list of matching points
-    
+
     max_iters = opts.max_iters  # the number of iterations to run RANSAC for
     inlier_tol = opts.inlier_tol # the tolerance value for considering a point to be an inlier
 
@@ -161,19 +163,19 @@ def computeH_ransac(locs1, locs2, opts):
         test_locs2 = deepcopy(locs2)
         # chose a random sample of 4 points to find H
         rand_index = []
-        
+
         rand_index = random.sample(range(int(locs1.shape[0])),k=4)
-        
+
         rand_points_1 = []
         rand_points_2 = []
-        
+
         for j in rand_index:
             rand_points_1.append(locs1[j,:])
             rand_points_2.append(locs2[j,:])
-        
+
         test_locs1 = np.delete(test_locs1, rand_index, axis=0)
         test_locs2 = np.delete(test_locs2, rand_index, axis=0)
-            
+
         correspondence_points_1 = np.vstack(rand_points_1)
         correspondence_points_2 = np.vstack(rand_points_2)
 
@@ -209,7 +211,7 @@ def computeH_ransac(locs1, locs2, opts):
 
         bestH2to1 = computeH_norm(final_locs_1, final_locs_2)
         return bestH2to1, final_inliers
-    
+
     else:
         bestH2to1 = computeH_norm(correspondence_points_1, correspondence_points_2)
         return bestH2to1, 0
@@ -242,14 +244,14 @@ def compute_inliers(h, x1, x2, tol):
 
     for i in range(x1.shape[0]):
         x2_est[i,:] = H @ x1_extd[i,:]
-    
+
     x2_est = x2_est/np.expand_dims(x2_est[:,2], axis=1)
     dist_error = np.linalg.norm((x2_extd-x2_est),axis=1)
-    
+
     # print("dist error is", dist_error)
     inliers = np.where((dist_error < tol), 1, 0)
     inlier_count = np.count_nonzero(inliers == 1)
-    
+
     return inliers, inlier_count, np.sum(dist_error), 0
 
 
@@ -283,7 +285,7 @@ def compositeH(H2to1, template, img):
 
     # Use mask to combine the warped template and the image
     composite_img = np.where(warped_mask, warped_template, img)
-    
+
     return composite_img
 
 def panorama(H2to1, template, img):
@@ -304,7 +306,7 @@ def panorama(H2to1, template, img):
 
     for i in range(x1.shape[0]):
         x2_est[i,:] = h @ x1_extd[i,:]
-    
+
     x2_est = x2_est/np.expand_dims(x2_est[:,2], axis=1)
 
     max_arr = np.max(x2_est.astype(int), axis=0)
@@ -329,7 +331,7 @@ def panorama(H2to1, template, img):
     cv2.waitKey()
 
     warped_template[t[1]:(h2+t[1]),t[0]:(w2+t[0]),:] = img[:,:,:]
-    
+
     return warped_template
 
 def panorama_composite(H2to1, template, img):
@@ -348,7 +350,7 @@ def panorama_composite(H2to1, template, img):
     # destination_img = img
     # source_img = template
     h = H2to1
-    
+
     img_padded = np.zeros((img.shape[0]+240,img.shape[1]+240,3), dtype=img.dtype)
     img_padded[0:img.shape[0], 0:img.shape[1], :] = img[:,:,:]
 
@@ -371,7 +373,7 @@ def panorama_composite(H2to1, template, img):
 
     # Use mask to combine the warped template and the image
     composite_img = np.where(warped_mask, warped_template, img_padded)
-    
+
     return composite_img
 
 def trim_images(img, ref_img):
@@ -392,6 +394,3 @@ def trim_images(img, ref_img):
     cv2.imwrite('/home/sush/CMU/Assignment_Sem_1/CV_A/Assignment_3/outputs/pano_trim_image_2.png', trimmed_img)
 
     return trimmed_img
-    
-
-
