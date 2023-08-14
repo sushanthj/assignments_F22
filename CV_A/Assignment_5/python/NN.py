@@ -82,7 +82,7 @@ def softmax(x):
     # shift the data in x
     shifted_x = x - np.expand_dims(np.max(x,axis=1),1)
 
-    # create a column vector of the sum along each row
+    # create a column vector of the sum of each row
     exp_sum = np.expand_dims(np.sum(np.exp(shifted_x),axis=1), axis=1)
 
     # use this sum of each row to normalize the class prediction scores
